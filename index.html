@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgriChain – Crop Supply Chain on Botchain</title>
+<style>
+  :root {
+    --green: #2d7a45;
+    --green-light: #4caf70;
+    --green-bg: #e8f5ec;
+    --gold: #c8a84b;
+    --dark: #1a2e1f;
+    --gray: #6b7c72;
+    --white: #ffffff;
+    --border: #cde0d4;
+    --card-bg: #f4faf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--green-bg); color: var(--dark); }
+
+  header {
+    background: var(--green);
+    color: var(--white);
+    padding: 1rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 1.4rem; }
+  header span { font-size: 0.8rem; background: var(--gold); color: var(--dark); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+
+  .hero {
+    background: linear-gradient(135deg, var(--green) 0%, #1b5e30 100%);
+    color: white; text-align: center; padding: 3rem 1rem;
+  }
+  .hero h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .hero p { opacity: 0.85; max-width: 500px; margin: 0 auto 1.5rem; }
+  .hero button { background: var(--gold); color: var(--dark); border: none; padding: 0.75rem 2rem; border-radius: 30px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+
+  nav {
+    display: flex; gap: 0.5rem; padding: 1rem 2rem; background: white; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  nav button {
+    background: none; border: 1px solid var(--border); padding: 0.45rem 1.1rem;
+    border-radius: 20px; cursor: pointer; font-size: 0.85rem; color: var(--gray); transition: all 0.2s;
+  }
+  nav button.active, nav button:hover { background: var(--green); color: white; border-color: var(--green); }
+
+  .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+
+  .card {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .card h3 { color: var(--green); margin-bottom: 1rem; font-size: 1.1rem; }
+
+  .form-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .form-row label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; font-size: 0.85rem; color: var(--gray); }
+  .form-row input, .form-row select {
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem;
+    font-size: 0.9rem; outline: none; transition: border 0.2s;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--green); }
+
+  .btn { background: var(--green); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
+  .btn:hover { background: var(--green-light); }
+  .btn-outline { background: none; border: 1px solid var(--green); color: var(--green); }
+
+  .lot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .lot-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+  }
+  .lot-card .tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-bottom: 0.5rem;
+  }
+  .tag-green { background: #d4edda; color: var(--green); }
+  .tag-yellow { background: #fff3cd; color: #856404; }
+  .tag-blue { background: #d1ecf1; color: #0c5460; }
+
+  .lot-card h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .lot-card p { font-size: 0.8rem; color: var(--gray); margin-bottom: 0.2rem; }
+  .lot-card .price { font-size: 0.95rem; font-weight: 700; color: var(--green); margin: 0.5rem 0; }
+  .lot-card .actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+
+  .timeline { list-style: none; padding-left: 0; }
+  .timeline li {
+    position: relative; padding: 0.75rem 0 0.75rem 2rem; border-left: 2px solid var(--border); font-size: 0.85rem;
+  }
+  .timeline li::before {
+    content: ''; position: absolute; left: -7px; top: 1rem;
+    width: 12px; height: 12px; border-radius: 50%; background: var(--green);
+  }
+  .timeline li .ts { font-size: 0.7rem; color: var(--gray); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+  .stat .val { font-size: 1.8rem; font-weight: 700; color: var(--green); }
+  .stat .lbl { font-size: 0.75rem; color: var(--gray); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; }
+  .alert-success { background: #d4edda; color: #155724; }
+  .alert-info { background: #d1ecf1; color: #0c5460; }
+
+  footer { text-align: center; padding: 2rem; color: var(--gray); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌾 AgriChain</h1>
+  <span>Powered by Botchain</span>
+</header>
+
+<div class="hero">
+  <h2>Farm-to-Table on the Blockchain</h2>
+  <p>Trace every crop lot from field to buyer. Immutable, transparent, and tamper-proof supply chain on Botchain.</p>
+  <button onclick="showSection('register')">Get Started as Farmer</button>
+</div>
+
+<nav>
+  <button class="active" onclick="showSection('dashboard')">📊 Dashboard</button>
+  <button onclick="showSection('register')">🧑‍🌾 Register Farmer</button>
+  <button onclick="showSection('create')">📦 Create Lot</button>
+  <button onclick="showSection('marketplace')">🛒 Marketplace</button>
+  <button onclick="showSection('trace')">🔍 Trace Lot</button>
+</nav>
+
+<div class="container">
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="section active">
+    <div class="stats">
+      <div class="stat"><div class="val">128</div><div class="lbl">Farmers</div></div>
+      <div class="stat"><div class="val">347</div><div class="lbl">Lots Created</div></div>
+      <div class="stat"><div class="val">89</div><div class="lbl">Lots Sold</div></div>
+      <div class="stat"><div class="val">14</div><div class="lbl">Crop Types</div></div>
+    </div>
+    <div class="card">
+      <h3>Recent Activity</h3>
+      <ul class="timeline">
+        <li>
+          <strong>Lot #347 Purchased</strong> – Tomato lot (500 kg) sold to 0xB3fa…
+          <div class="ts">2 minutes ago · Ibadan, NG</div>
+        </li>
+        <li>
+          <strong>Lot #346 In Transit</strong> – Maize lot checkpoint added by Ade Farms
+          <div class="ts">18 minutes ago · Ogbomoso, NG</div>
+        </li>
+        <li>
+          <strong>Farmer Verified</strong> – Chinwe Nwosu (Delta State) verified by platform admin
+          <div class="ts">1 hour ago</div>
+        </li>
+        <li>
+          <strong>Lot #344 Created</strong> – Yam lot (1200 kg) registered on-chain
+          <div class="ts">3 hours ago · Benue, NG</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Register Farmer -->
+  <div id="register" class="section">
+    <div class="card">
+      <h3>🧑‍🌾 Register as a Farmer</h3>
+      <div class="alert alert-info">Connect your Botchain wallet to register. Verification by a platform admin enables you to create produce lots.</div>
+      <div class="form-row">
+        <label>Full Name <input id="fName" placeholder="e.g. Ade Bello" /></label>
+        <label>Farm Location <input id="fLoc" placeholder="e.g. Ogbomoso, Oyo State" /></label>
+      </div>
+      <button class="btn" onclick="registerFarmer()">Register on Botchain</button>
+    </div>
+  </div>
+
+  <!-- Create Lot -->
+  <div id="create" class="section">
+    <div class="card">
+      <h3>📦 Create Produce Lot</h3>
+      <div class="form-row">
+        <label>Crop Type <input id="cropType" placeholder="e.g. Tomato" /></label>
+        <label>Variety <input id="variety" placeholder="e.g. Roma" /></label>
+      </div>
+      <div class="form-row">
+        <label>Weight (kg) <input id="weight" type="number" placeholder="500" /></label>
+        <label>Harvest Date <input id="harvest" type="date" /></label>
+      </div>
+      <div class="form-row">
+        <label>Farm Location <input id="lotLoc" placeholder="Farm GPS / Address" /></label>
+        <label>Price per kg (BOT wei) <input id="price" placeholder="1000000000000000" /></label>
+      </div>
+      <button class="btn" onclick="createLot()">Create Lot on Botchain</button>
+    </div>
+  </div>
+
+  <!-- Marketplace -->
+  <div id="marketplace" class="section">
+    <div class="card">
+      <h3>🛒 Available Produce Lots</h3>
+      <div class="lot-grid" id="lotGrid">
+
+        <div class="lot-card">
+          <span class="tag tag-green">Verified Farmer</span>
+          <h4>🍅 Tomato – Roma Variety</h4>
+          <p>📍 Ibadan, Oyo State</p>
+          <p>⚖️ 500 kg · Harvested 28 Oct 2026</p>
+          <p>🌾 Farmer: Ade Bello</p>
+          <div class="price">0.05 BOT / kg</div>
+          <div class="actions">
+            <button class="btn" onclick="buyLot(1)" style="flex:1">Buy Lot</button>
+            <button class="btn btn-outline" onclick="viewTrace(1)">Trace</button>
+          </div>
+        </div>
+
+        <div class="lot-card">
+          <span class="tag tag-yellow">In Transit</span>
+          <h4>🌽 Maize – Yellow Sweet</h4>
+          <p>📍 Benue, Benue State</p>
+          <p>⚖️ 1200 kg · Harvested 20 Oct 2026</p>
+          <p>🌾 Farmer: Chinwe Nwosu</p>
+          <div class="price">0.02 BOT / kg</div>
+          <div class="actions">
+            <button class="btn" onclick="buyLot(2)" style="flex:1">Buy Lot</button>
+            <button class="btn btn-outline" onclick="viewTrace(2)">Trace</button>
+          </div>
+        </div>
+
+        <div class="lot-card">
+          <span class="tag tag-green">Verified Farmer</span>
+          <h4>🍠 Yam – Puna Variety</h4>
+          <p>📍 Ogbomoso, Oyo State</p>
+          <p>⚖️ 800 kg · Harvested 15 Oct 2026</p>
+          <p>🌾 Farmer: Kehinde Farms</p>
+          <div class="price">0.04 BOT / kg</div>
+          <div class="actions">
+            <button class="btn" onclick="buyLot(3)" style="flex:1">Buy Lot</button>
+            <button class="btn btn-outline" onclick="viewTrace(3)">Trace</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Trace -->
+  <div id="trace" class="section">
+    <div class="card">
+      <h3>🔍 Trace a Produce Lot</h3>
+      <div class="form-row">
+        <label>Lot ID <input id="traceId" placeholder="Enter lot ID e.g. 1" type="number" /></label>
+      </div>
+      <button class="btn" onclick="traceLot()">Fetch Trace from Botchain</button>
+    </div>
+    <div class="card" id="traceResult" style="display:none">
+      <h3>📋 Lot #<span id="traceNum"></span> – Supply Chain History</h3>
+      <ul class="timeline" id="traceTimeline"></ul>
+    </div>
+  </div>
+
+</div>
+
+<footer>AgriChain is deployed on Botchain · Smart contract: 0xAgriChain… · Open source</footer>
+
+<script>
+  const traceData = {
+    1: [
+      { action: "Lot Registered", location: "Ibadan Farm, Oyo State", ts: "Oct 28 2026, 07:00", notes: "Initial registration on AgriChain" },
+      { action: "Quality Check Passed", location: "Ibadan Farm", ts: "Oct 28 2026, 10:30", notes: "Grade A – moisture 14%, no pesticide residue" },
+      { action: "Loaded to Truck", location: "Ibadan Farm Gate", ts: "Oct 29 2026, 06:00", notes: "Cold chain transport initiated" },
+      { action: "Checkpoint – Oyo Toll", location: "Oyo Expressway", ts: "Oct 29 2026, 09:15", notes: "" },
+      { action: "Arrived Warehouse", location: "Agbowo Cold Storage, Ibadan", ts: "Oct 29 2026, 12:00", notes: "Temperature: 8°C" },
+    ],
+    2: [
+      { action: "Lot Registered", location: "Makurdi, Benue State", ts: "Oct 20 2026, 08:00", notes: "1200 kg yellow maize" },
+      { action: "Dried & Bagged", location: "Makurdi Drying Yard", ts: "Oct 22 2026, 11:00", notes: "Moisture reduced to 12%" },
+      { action: "In Transit", location: "Makurdi – Lagos Road", ts: "Oct 23 2026, 06:00", notes: "ETA 2 days" },
+    ],
+    3: [
+      { action: "Lot Registered", location: "Ogbomoso, Oyo State", ts: "Oct 15 2026, 09:00", notes: "800 kg Puna yam" },
+      { action: "Quality Inspection", location: "Ogbomoso Farm", ts: "Oct 15 2026, 14:00", notes: "Premium grade, no rot" },
+    ]
+  };
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function registerFarmer() {
+    const name = document.getElementById('fName').value;
+    const loc  = document.getElementById('fLoc').value;
+    if (!name || !loc) { alert('Please fill all fields'); return; }
+    alert(`✅ Registering ${name} on Botchain...\nTx simulated. Await admin verification.`);
+  }
+
+  function createLot() {
+    const crop = document.getElementById('cropType').value;
+    if (!crop) { alert('Please fill all fields'); return; }
+    alert(`✅ Lot for ${crop} submitted to Botchain!\nLot ID will be assigned after tx confirmation.`);
+  }
+
+  function buyLot(id) {
+    alert(`🛒 Purchasing Lot #${id}...\nConnecting to Botchain wallet and calling purchaseLot(${id})...`);
+  }
+
+  function viewTrace(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('trace').classList.add('active');
+    document.getElementById('traceId').value = id;
+    traceLot(id);
+  }
+
+  function traceLot(id) {
+    const lotId = id || parseInt(document.getElementById('traceId').value);
+    if (!lotId) { alert('Enter a lot ID'); return; }
+    const data = traceData[lotId];
+    if (!data) { alert('Lot not found'); return; }
+
+    document.getElementById('traceNum').textContent = lotId;
+    const tl = document.getElementById('traceTimeline');
+    tl.innerHTML = data.map(c => `
+      <li>
+        <strong>${c.action}</strong> – ${c.location}
+        ${c.notes ? `<br><em>${c.notes}</em>` : ''}
+        <div class="ts">${c.ts}</div>
+      </li>
+    `).join('');
+    document.getElementById('traceResult').style.display = 'block';
+  }
+</script>
+</body>
+</html>

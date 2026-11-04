@@ -1,334 +1,1388 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AgriChain – Crop Supply Chain on Botchain</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>AgriChain – Crop Supply Chain on BOT Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"></script>
 <style>
-  :root {
-    --green: #2d7a45;
-    --green-light: #4caf70;
-    --green-bg: #e8f5ec;
-    --gold: #c8a84b;
-    --dark: #1a2e1f;
-    --gray: #6b7c72;
-    --white: #ffffff;
-    --border: #cde0d4;
-    --card-bg: #f4faf6;
+/* ── TOKENS ── */
+:root {
+  --forest:    #1a3a28;
+  --canopy:    #2c5f3e;
+  --leaf:      #3d8c5a;
+  --sprout:    #5cb87a;
+  --mist:      #e8f2ec;
+  --amber:     #c8882a;
+  --amber-lt:  #f0c060;
+  --bark:      #3d2b1a;
+  --paper:     #f7faf8;
+  --smoke:     #94a89d;
+  --border:    #d4e4da;
+  --white:     #ffffff;
+  --danger:    #c0392b;
+  --info:      #2471a3;
+  --sidebar-w: 220px;
+  --radius:    10px;
+  --shadow:    0 1px 4px rgba(0,0,0,0.08);
+  --bottom-nav-h: 60px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-padding-top: var(--safe-t); }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--paper);
+  color: var(--forest);
+  font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* ════════════════════════════════════════
+   LANDING
+════════════════════════════════════════ */
+#landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--forest);
+  color: white;
+}
+
+/* Nav */
+.lp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 3rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+.lp-brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.lp-brand .dot { color: var(--amber-lt); }
+
+.lp-nav-links { display: flex; align-items: center; gap: 2rem; }
+.lp-nav-links a {
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.lp-nav-links a:hover { color: white; }
+.lp-nav-cta {
+  background: var(--amber);
+  color: white;
+  border: none;
+  padding: 0.55rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.lp-nav-cta:hover { background: var(--amber-lt); color: var(--bark); }
+
+/* Hamburger (mobile only) */
+.lp-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px;
+  background: none;
+  border: none;
+}
+.lp-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* Mobile nav drawer */
+.lp-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #0e2419;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem 1.5rem;
+  flex-direction: column;
+  gap: 0;
+  z-index: 200;
+}
+.lp-mobile-menu.open { display: flex; }
+.lp-mobile-menu a {
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.lp-mobile-menu a:last-child { border-bottom: none; }
+.lp-mobile-menu .lp-mobile-cta {
+  margin-top: 0.75rem;
+  background: var(--amber);
+  color: white;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+}
+
+/* Hero */
+.lp-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 1.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.lp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(93,184,122,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.lp-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--amber-lt);
+  background: rgba(240,192,96,0.12);
+  border: 1px solid rgba(240,192,96,0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.04em;
+}
+.lp-hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.9rem, 6vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+  max-width: 700px;
+  margin-bottom: 1rem;
+}
+.lp-hero h1 em { font-style: normal; color: var(--sprout); }
+.lp-hero p {
+  font-size: clamp(0.88rem, 2.5vw, 1rem);
+  color: rgba(255,255,255,0.65);
+  max-width: 520px;
+  line-height: 1.65;
+  margin-bottom: 2rem;
+}
+.lp-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn-launch {
+  background: var(--sprout);
+  color: var(--forest);
+  border: none;
+  padding: 0.8rem 1.75rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.btn-launch:hover { background: #72d492; }
+.btn-launch-outline {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.75);
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+.btn-launch-outline:hover { border-color: rgba(255,255,255,0.4); color: white; }
+
+.lp-stats {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 1.25rem;
+}
+.lp-stat { text-align: center; }
+.lp-stat .v {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--amber-lt);
+}
+.lp-stat .l { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+/* Features */
+.lp-features {
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 3.5rem 1.5rem;
+}
+.lp-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.lp-feature {
+  padding: 1.25rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+}
+.lp-feature .fi { font-size: 1.5rem; margin-bottom: 0.6rem; }
+.lp-feature h3 { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+.lp-feature p  { font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+/* How it works */
+.lp-how {
+  padding: 3.5rem 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+.lp-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--amber-lt);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+.lp-section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.3rem, 4vw, 1.75rem);
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+.lp-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+.lp-step { display: flex; flex-direction: column; gap: 0.5rem; }
+.lp-step-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: rgba(93,184,122,0.2);
+  line-height: 1;
+}
+.lp-step h4 { font-size: 0.88rem; font-weight: 600; }
+.lp-step p  { font-size: 0.77rem; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+/* CTA gate */
+.lp-gate {
+  margin: 0 1.5rem 3rem;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(93,184,122,0.07);
+  border: 1px solid rgba(93,184,122,0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.lp-gate-text h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.lp-gate-text p { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+#landingConnectBtn {
+  background: var(--sprout);
+  color: var(--forest);
+  border: none;
+  padding: 0.8rem 1.75rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  width: 100%;
+  justify-content: center;
+}
+#landingConnectBtn:hover { background: #72d492; }
+
+/* Landing footer */
+.lp-footer {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.lp-footer-brand { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600; opacity: 0.6; }
+.lp-footer-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.lp-footer-links a {
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.lp-footer-links a:hover { color: rgba(255,255,255,0.75); }
+.lp-footer-copy { font-size: 0.7rem; color: rgba(255,255,255,0.22); width: 100%; }
+
+/* ════════════════════════════════════════
+   APP
+════════════════════════════════════════ */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+#app.visible { display: flex; }
+
+/* ── SIDEBAR (desktop) ── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--forest);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  transition: transform 0.25s ease;
+}
+.sidebar-logo {
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo .brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.sidebar-logo .brand .dot { color: var(--amber-lt); }
+.sidebar-logo .chain-badge { font-size: 0.65rem; color: var(--smoke); margin-top: 2px; font-weight: 400; letter-spacing: 0.03em; }
+.sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+.nav-section-label {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.3); padding: 0.75rem 1.25rem 0.3rem;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.65rem 1.25rem; color: rgba(255,255,255,0.65);
+  font-size: 0.85rem; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; border-left: 3px solid transparent;
+  user-select: none;
+}
+.nav-item:hover  { color: white; background: rgba(255,255,255,0.05); }
+.nav-item.active { color: var(--amber-lt); background: rgba(240,192,96,0.1); border-left-color: var(--amber-lt); }
+.nav-item .icon  { font-size: 1.1rem; width: 20px; text-align: center; flex-shrink: 0; }
+.sidebar-wallet {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+#walletBtn {
+  width: 100%; padding: 0.6rem;
+  background: rgba(93,184,122,0.2); border: 1px solid var(--sprout);
+  border-radius: var(--radius); color: var(--sprout);
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+#walletAddress { font-size: 0.7rem; color: var(--smoke); text-align: center; margin-top: 4px; }
+.sidebar-footer-links {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar-footer-links a {
+  font-size: 0.7rem; color: rgba(255,255,255,0.3); text-decoration: none;
+  display: flex; align-items: center; gap: 0.3rem; transition: color 0.15s;
+}
+.sidebar-footer-links a:hover { color: rgba(255,255,255,0.6); }
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+#sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 199;
+}
+#sidebarOverlay.open { display: block; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+#menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+#menuToggle span { display: block; width: 20px; height: 2px; background: var(--forest); border-radius: 2px; }
+.topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; color: var(--forest); }
+.topbar-chain { display: flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; color: var(--smoke); }
+.chain-dot { width: 7px; height: 7px; background: var(--sprout); border-radius: 50%; box-shadow: 0 0 0 2px rgba(93,184,122,0.3); flex-shrink: 0; }
+
+/* ── MAIN ── */
+#main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.content { padding: 1.5rem; flex: 1; }
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── STAT ROW ── */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-box { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); }
+.stat-box .val { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--forest); line-height: 1; word-break: break-all; }
+.stat-box .lbl { font-size: 0.7rem; color: var(--smoke); margin-top: 4px; font-weight: 500; }
+.stat-box .change { font-size: 0.68rem; color: var(--sprout); margin-top: 4px; }
+
+/* ── CARDS ── */
+.card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+.card-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--forest); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.activity-table { width: 100%; border-collapse: collapse; min-width: 360px; }
+.activity-table th { font-size: 0.68rem; font-weight: 600; color: var(--smoke); text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.activity-table td { padding: 0.65rem 0.75rem; font-size: 0.8rem; border-bottom: 1px solid var(--mist); color: var(--forest); }
+.activity-table tr:last-child td { border-bottom: none; }
+
+/* ── PILL ── */
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.pill-green { background: #d1f0da; color: #1a6630; }
+.pill-amber { background: #fdf0d6; color: #7a4f00; }
+.pill-blue  { background: #d6eaf8; color: #154e78; }
+.pill-gray  { background: #e8eded; color: #4a5a52; }
+.pill-red   { background: #fddede; color: #7a1515; }
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.75rem; font-weight: 600; color: var(--smoke); }
+.field input, .field select, .field textarea {
+  border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem;
+  font-size: 0.88rem; font-family: 'Inter', sans-serif; color: var(--forest);
+  outline: none; background: var(--paper); transition: border 0.15s;
+  min-height: 44px;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--leaf); background: white; }
+.field textarea { resize: vertical; min-height: 80px; }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.6rem 1.25rem; border-radius: 8px; font-size: 0.83rem; font-weight: 600; cursor: pointer; border: none; font-family: 'Inter', sans-serif; transition: all 0.15s; min-height: 40px; }
+.btn-primary { background: var(--canopy); color: white; }
+.btn-primary:hover { background: var(--leaf); }
+.btn-amber  { background: var(--amber); color: white; }
+.btn-amber:hover { background: var(--amber-lt); color: var(--bark); }
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--forest); }
+.btn-outline:hover { border-color: var(--canopy); color: var(--canopy); background: var(--mist); }
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.75rem; min-height: 34px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── MARKETPLACE ── */
+.lot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+.lot-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.lot-card-band { height: 4px; }
+.band-green { background: linear-gradient(90deg, var(--canopy), var(--sprout)); }
+.band-amber { background: linear-gradient(90deg, var(--amber), var(--amber-lt)); }
+.band-blue  { background: linear-gradient(90deg, var(--info), #5dade2); }
+.lot-card-body { padding: 1rem; flex: 1; }
+.lot-emoji { font-size: 1.75rem; margin-bottom: 0.4rem; }
+.lot-name { font-family: 'Space Grotesk', sans-serif; font-size: 0.93rem; font-weight: 600; margin-bottom: 0.25rem; }
+.lot-meta { font-size: 0.74rem; color: var(--smoke); margin-bottom: 2px; }
+.lot-price { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--canopy); margin: 0.5rem 0; }
+.lot-price span { font-size: 0.7rem; font-weight: 400; color: var(--smoke); }
+.lot-card-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--mist); display: flex; gap: 0.5rem; }
+
+/* ── TRACE TIMELINE ── */
+.trace-step { display: flex; gap: 0.75rem; position: relative; }
+.trace-step-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.trace-node { width: 34px; height: 34px; border-radius: 50%; background: var(--canopy); border: 3px solid white; box-shadow: 0 0 0 2px var(--canopy); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: white; font-weight: 700; flex-shrink: 0; }
+.trace-line { flex: 1; width: 2px; background: var(--border); margin: 4px 0; min-height: 16px; }
+.trace-step:last-child .trace-line { display: none; }
+.trace-content { flex: 1; padding-bottom: 1.25rem; }
+.trace-action { font-weight: 600; font-size: 0.86rem; color: var(--forest); }
+.trace-loc   { font-size: 0.74rem; color: var(--smoke); margin: 2px 0; }
+.trace-notes { font-size: 0.74rem; color: var(--info); margin-top: 3px; font-style: italic; }
+.trace-ts    { font-size: 0.67rem; color: var(--smoke); margin-top: 3px; }
+
+/* ── ALERTS ── */
+.alert { padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.82rem; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+.alert-info    { background: #ebf4ff; color: var(--info);   border-left: 3px solid var(--info); }
+.alert-success { background: #ebfbf0; color: #1a6630;       border-left: 3px solid var(--sprout); }
+.alert-warning { background: #fff8eb; color: #7a4f00;       border-left: 3px solid var(--amber); }
+.alert-error   { background: #fef0f0; color: var(--danger); border-left: 3px solid var(--danger); }
+
+/* ── TX TOAST ── */
+#txLog { position: fixed; bottom: 1.5rem; right: 1rem; width: min(320px, calc(100vw - 2rem)); z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+.tx-toast { background: var(--forest); color: white; border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.78rem; box-shadow: 0 4px 16px rgba(0,0,0,0.2); pointer-events: auto; display: flex; align-items: flex-start; gap: 0.5rem; animation: slideIn 0.2s ease; }
+.tx-toast .tx-icon { font-size: 1rem; flex-shrink: 0; }
+.tx-toast .tx-link { color: var(--amber-lt); text-decoration: none; font-size: 0.7rem; }
+@keyframes slideIn { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 1.25rem; }
+.section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--forest); }
+.section-header p  { font-size: 0.8rem; color: var(--smoke); margin-top: 3px; }
+
+/* ── LOT DETAIL ── */
+.lot-detail-row { display: flex; align-items: flex-start; padding: 0.55rem 0; border-bottom: 1px solid var(--mist); font-size: 0.82rem; gap: 0.5rem; }
+.lot-detail-row:last-child { border-bottom: none; }
+.lot-detail-label { min-width: 130px; color: var(--smoke); font-weight: 500; flex-shrink: 0; }
+.lot-detail-val { color: var(--forest); font-weight: 500; word-break: break-all; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--smoke); }
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.empty-state p { font-size: 0.83rem; }
+
+/* ── SPINNER ── */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── APP FOOTER ── */
+.app-footer {
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  padding-bottom: calc(1rem + var(--safe-b));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-left: var(--sidebar-w);
+}
+.app-footer-left { font-size: 0.7rem; color: var(--smoke); }
+.app-footer-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.app-footer-links a { font-size: 0.7rem; color: var(--smoke); text-decoration: none; display: flex; align-items: center; gap: 0.25rem; transition: color 0.15s; }
+.app-footer-links a:hover { color: var(--canopy); }
+
+/* ── BOTTOM NAV (mobile only) ── */
+#bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: var(--forest);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: var(--safe-b);
+}
+.bottom-nav-inner {
+  display: flex;
+  align-items: stretch;
+  height: var(--bottom-nav-h);
+}
+.bnav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0 4px;
+  transition: color 0.15s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-item .bicon { font-size: 1.3rem; line-height: 1; }
+.bnav-item.active { color: var(--amber-lt); }
+.bnav-item:active { opacity: 0.7; }
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+
+/* Tablet: 1024px */
+@media (max-width: 1024px) {
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .two-col  { grid-template-columns: 1fr; }
+}
+
+/* Mobile: 768px — switch to bottom nav */
+@media (max-width: 768px) {
+  /* Landing nav */
+  .lp-nav { padding: 1rem 1.25rem; }
+  .lp-nav-links { display: none; }
+  .lp-hamburger { display: flex; }
+  #landingConnectBtn { width: 100%; }
+
+  .lp-hero { padding: 2.5rem 1.25rem 2rem; }
+  .lp-stats { gap: 1.75rem; }
+  .lp-stats .lp-stat { min-width: 70px; }
+  .lp-features { padding: 2.5rem 1.25rem; }
+  .lp-features-grid { grid-template-columns: 1fr 1fr; }
+  .lp-how   { padding: 2.5rem 1.25rem; }
+  .lp-steps { grid-template-columns: 1fr 1fr; }
+  .lp-gate  { margin: 0 1.25rem 2.5rem; padding: 1.5rem; flex-direction: column; }
+  .lp-gate-text { width: 100%; }
+  .lp-footer { padding: 1.25rem; }
+
+  /* App: hide desktop sidebar, show bottom nav */
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #menuToggle { display: flex; }
+  #main { margin-left: 0; }
+  .app-footer { margin-left: 0; display: none; }
+  #bottomNav { display: block; }
+
+  /* Content padding clears bottom nav */
+  .content {
+    padding: 1rem;
+    padding-bottom: calc(var(--bottom-nav-h) + var(--safe-b) + 1rem);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: var(--green-bg); color: var(--dark); }
 
-  header {
-    background: var(--green);
-    color: var(--white);
-    padding: 1rem 2rem;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  header h1 { font-size: 1.4rem; }
-  header span { font-size: 0.8rem; background: var(--gold); color: var(--dark); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  /* Grids */
+  .stat-row { grid-template-columns: 1fr 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid.cols-3 { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
 
-  .hero {
-    background: linear-gradient(135deg, var(--green) 0%, #1b5e30 100%);
-    color: white; text-align: center; padding: 3rem 1rem;
-  }
-  .hero h2 { font-size: 2rem; margin-bottom: 0.5rem; }
-  .hero p { opacity: 0.85; max-width: 500px; margin: 0 auto 1.5rem; }
-  .hero button { background: var(--gold); color: var(--dark); border: none; padding: 0.75rem 2rem; border-radius: 30px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  /* Topbar */
+  .topbar { padding: 0.65rem 1rem; }
+  .topbar-chain span:not(.chain-dot) { display: none; }
 
-  nav {
-    display: flex; gap: 0.5rem; padding: 1rem 2rem; background: white; border-bottom: 1px solid var(--border); flex-wrap: wrap;
-  }
-  nav button {
-    background: none; border: 1px solid var(--border); padding: 0.45rem 1.1rem;
-    border-radius: 20px; cursor: pointer; font-size: 0.85rem; color: var(--gray); transition: all 0.2s;
-  }
-  nav button.active, nav button:hover { background: var(--green); color: white; border-color: var(--green); }
+  /* Toast */
+  #txLog { bottom: calc(var(--bottom-nav-h) + var(--safe-b) + 0.75rem); }
+}
 
-  .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-
-  .card {
-    background: white; border: 1px solid var(--border); border-radius: 12px;
-    padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  .card h3 { color: var(--green); margin-bottom: 1rem; font-size: 1.1rem; }
-
-  .form-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
-  .form-row label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; font-size: 0.85rem; color: var(--gray); }
-  .form-row input, .form-row select {
-    border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem;
-    font-size: 0.9rem; outline: none; transition: border 0.2s;
-  }
-  .form-row input:focus, .form-row select:focus { border-color: var(--green); }
-
-  .btn { background: var(--green); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
-  .btn:hover { background: var(--green-light); }
-  .btn-outline { background: none; border: 1px solid var(--green); color: var(--green); }
-
-  .lot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-  .lot-card {
-    background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
-  }
-  .lot-card .tag {
-    display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-bottom: 0.5rem;
-  }
-  .tag-green { background: #d4edda; color: var(--green); }
-  .tag-yellow { background: #fff3cd; color: #856404; }
-  .tag-blue { background: #d1ecf1; color: #0c5460; }
-
-  .lot-card h4 { font-size: 1rem; margin-bottom: 0.3rem; }
-  .lot-card p { font-size: 0.8rem; color: var(--gray); margin-bottom: 0.2rem; }
-  .lot-card .price { font-size: 0.95rem; font-weight: 700; color: var(--green); margin: 0.5rem 0; }
-  .lot-card .actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
-
-  .timeline { list-style: none; padding-left: 0; }
-  .timeline li {
-    position: relative; padding: 0.75rem 0 0.75rem 2rem; border-left: 2px solid var(--border); font-size: 0.85rem;
-  }
-  .timeline li::before {
-    content: ''; position: absolute; left: -7px; top: 1rem;
-    width: 12px; height: 12px; border-radius: 50%; background: var(--green);
-  }
-  .timeline li .ts { font-size: 0.7rem; color: var(--gray); }
-
-  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-  .stat { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
-  .stat .val { font-size: 1.8rem; font-weight: 700; color: var(--green); }
-  .stat .lbl { font-size: 0.75rem; color: var(--gray); }
-
-  .section { display: none; }
-  .section.active { display: block; }
-
-  .alert { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; }
-  .alert-success { background: #d4edda; color: #155724; }
-  .alert-info { background: #d1ecf1; color: #0c5460; }
-
-  footer { text-align: center; padding: 2rem; color: var(--gray); font-size: 0.8rem; }
+/* Small phones: 480px */
+@media (max-width: 480px) {
+  .lp-features-grid { grid-template-columns: 1fr; }
+  .lp-steps { grid-template-columns: 1fr; }
+  .lp-hero h1 { font-size: 1.75rem; }
+  .lp-hero-actions { flex-direction: column; align-items: stretch; }
+  .btn-launch, .btn-launch-outline { justify-content: center; width: 100%; }
+  .stat-row { grid-template-columns: 1fr 1fr; }
+  .stat-box .val { font-size: 1.5rem; }
+  .lot-detail-label { min-width: 110px; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🌾 AgriChain</h1>
-  <span>Powered by Botchain</span>
-</header>
+<!-- ══════════════════════════════════════════ LANDING ══ -->
+<div id="landing">
 
-<div class="hero">
-  <h2>Farm-to-Table on the Blockchain</h2>
-  <p>Trace every crop lot from field to buyer. Immutable, transparent, and tamper-proof supply chain on Botchain.</p>
-  <button onclick="showSection('register')">Get Started as Farmer</button>
-</div>
+  <nav class="lp-nav">
+    <div class="lp-brand">🌾 AgriChain<span class="dot">.</span></div>
 
-<nav>
-  <button class="active" onclick="showSection('dashboard')">📊 Dashboard</button>
-  <button onclick="showSection('register')">🧑‍🌾 Register Farmer</button>
-  <button onclick="showSection('create')">📦 Create Lot</button>
-  <button onclick="showSection('marketplace')">🛒 Marketplace</button>
-  <button onclick="showSection('trace')">🔍 Trace Lot</button>
-</nav>
-
-<div class="container">
-
-  <!-- Dashboard -->
-  <div id="dashboard" class="section active">
-    <div class="stats">
-      <div class="stat"><div class="val">128</div><div class="lbl">Farmers</div></div>
-      <div class="stat"><div class="val">347</div><div class="lbl">Lots Created</div></div>
-      <div class="stat"><div class="val">89</div><div class="lbl">Lots Sold</div></div>
-      <div class="stat"><div class="val">14</div><div class="lbl">Crop Types</div></div>
+    <!-- Desktop links -->
+    <div class="lp-nav-links">
+      <a href="https://botchain.ai" target="_blank">BOT Chain</a>
+      <a href="https://scan.botchain.ai" target="_blank">Explorer</a>
+      <a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank">Contract</a>
+      <button class="lp-nav-cta" onclick="connectWallet()">Connect Wallet</button>
     </div>
-    <div class="card">
-      <h3>Recent Activity</h3>
-      <ul class="timeline">
-        <li>
-          <strong>Lot #347 Purchased</strong> – Tomato lot (500 kg) sold to 0xB3fa…
-          <div class="ts">2 minutes ago · Ibadan, NG</div>
-        </li>
-        <li>
-          <strong>Lot #346 In Transit</strong> – Maize lot checkpoint added by Ade Farms
-          <div class="ts">18 minutes ago · Ogbomoso, NG</div>
-        </li>
-        <li>
-          <strong>Farmer Verified</strong> – Chinwe Nwosu (Delta State) verified by platform admin
-          <div class="ts">1 hour ago</div>
-        </li>
-        <li>
-          <strong>Lot #344 Created</strong> – Yam lot (1200 kg) registered on-chain
-          <div class="ts">3 hours ago · Benue, NG</div>
-        </li>
-      </ul>
+
+    <!-- Mobile hamburger -->
+    <button class="lp-hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Mobile drawer -->
+    <div class="lp-mobile-menu" id="mobileMenu">
+      <a href="https://botchain.ai" target="_blank">🌐 BOT Chain</a>
+      <a href="https://scan.botchain.ai" target="_blank">🔍 Explorer</a>
+      <a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank">📄 Contract</a>
+      <button class="lp-mobile-cta" onclick="connectWallet()">🔗 Connect Wallet</button>
+    </div>
+  </nav>
+
+  <div class="lp-hero">
+    <div class="lp-hero-eyebrow">⛓ Powered by BOT Chain · Chain ID 677</div>
+    <h1>Farm-to-Table,<br><em>immutably on-chain</em></h1>
+    <p>AgriChain brings full supply chain transparency to African agriculture. Every crop lot — from harvest to buyer — recorded on BOT Chain. Tamper-proof, traceable, trustless.</p>
+    <div class="lp-hero-actions">
+      <button class="btn-launch" onclick="connectWallet()">🔗 Connect Wallet to Launch</button>
+      <a class="btn-launch-outline" href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank">📄 View Contract ↗</a>
+    </div>
+    <div class="lp-stats">
+      <div class="lp-stat"><div class="v" id="heroLots">—</div><div class="l">Lots On-Chain</div></div>
+      <div class="lp-stat"><div class="v">677</div><div class="l">Chain ID</div></div>
+      <div class="lp-stat"><div class="v">2.5%</div><div class="l">Platform Fee</div></div>
+      <div class="lp-stat"><div class="v">BOT</div><div class="l">Currency</div></div>
     </div>
   </div>
 
-  <!-- Register Farmer -->
-  <div id="register" class="section">
-    <div class="card">
-      <h3>🧑‍🌾 Register as a Farmer</h3>
-      <div class="alert alert-info">Connect your Botchain wallet to register. Verification by a platform admin enables you to create produce lots.</div>
-      <div class="form-row">
-        <label>Full Name <input id="fName" placeholder="e.g. Ade Bello" /></label>
-        <label>Farm Location <input id="fLoc" placeholder="e.g. Ogbomoso, Oyo State" /></label>
-      </div>
-      <button class="btn" onclick="registerFarmer()">Register on Botchain</button>
+  <div class="lp-features">
+    <div class="lp-features-grid">
+      <div class="lp-feature"><div class="fi">🧑‍🌾</div><h3>On-Chain Farmer Registry</h3><p>Farmers register their wallet and identity on BOT Chain. Verified by platform admins, immutably recorded.</p></div>
+      <div class="lp-feature"><div class="fi">📦</div><h3>Produce Lot Minting</h3><p>Each harvest becomes a unique on-chain lot with crop type, weight, harvest date, and price — owned by the farmer's wallet.</p></div>
+      <div class="lp-feature"><div class="fi">🔍</div><h3>Full Traceability</h3><p>Every checkpoint — quality check, transit, warehouse arrival — is recorded on-chain with handler address and timestamp.</p></div>
+      <div class="lp-feature"><div class="fi">🛒</div><h3>Trustless Marketplace</h3><p>Buyers pay directly in BOT. The smart contract handles payment, ownership transfer, and status update atomically.</p></div>
     </div>
   </div>
 
-  <!-- Create Lot -->
-  <div id="create" class="section">
-    <div class="card">
-      <h3>📦 Create Produce Lot</h3>
-      <div class="form-row">
-        <label>Crop Type <input id="cropType" placeholder="e.g. Tomato" /></label>
-        <label>Variety <input id="variety" placeholder="e.g. Roma" /></label>
-      </div>
-      <div class="form-row">
-        <label>Weight (kg) <input id="weight" type="number" placeholder="500" /></label>
-        <label>Harvest Date <input id="harvest" type="date" /></label>
-      </div>
-      <div class="form-row">
-        <label>Farm Location <input id="lotLoc" placeholder="Farm GPS / Address" /></label>
-        <label>Price per kg (BOT wei) <input id="price" placeholder="1000000000000000" /></label>
-      </div>
-      <button class="btn" onclick="createLot()">Create Lot on Botchain</button>
+  <div class="lp-how">
+    <div class="lp-section-label">How it works</div>
+    <div class="lp-section-title">From field to buyer in four steps</div>
+    <div class="lp-steps">
+      <div class="lp-step"><div class="lp-step-num">01</div><h4>Register as Farmer</h4><p>Connect your wallet and register your name and farm location. An admin verifies your account on-chain.</p></div>
+      <div class="lp-step"><div class="lp-step-num">02</div><h4>Create a Lot</h4><p>Mint a produce lot with crop details, weight, harvest date, and price per kg in BOT wei.</p></div>
+      <div class="lp-step"><div class="lp-step-num">03</div><h4>Add Checkpoints</h4><p>Handlers add supply chain checkpoints as the lot moves — quality checks, transit, cold storage.</p></div>
+      <div class="lp-step"><div class="lp-step-num">04</div><h4>Buyer Purchases</h4><p>Buyers browse the marketplace, pay in BOT, and ownership transfers on-chain instantly.</p></div>
     </div>
   </div>
 
-  <!-- Marketplace -->
-  <div id="marketplace" class="section">
-    <div class="card">
-      <h3>🛒 Available Produce Lots</h3>
-      <div class="lot-grid" id="lotGrid">
+  <div class="lp-gate">
+    <div class="lp-gate-text">
+      <h3>Ready to get started?</h3>
+      <p>Connect your BOT Chain wallet to access the full platform.</p>
+    </div>
+    <button id="landingConnectBtn" onclick="connectWallet()">
+      <span id="landingConnectSpinner" style="display:none" class="spinner"></span>
+      🔗 Connect Wallet
+    </button>
+  </div>
 
-        <div class="lot-card">
-          <span class="tag tag-green">Verified Farmer</span>
-          <h4>🍅 Tomato – Roma Variety</h4>
-          <p>📍 Ibadan, Oyo State</p>
-          <p>⚖️ 500 kg · Harvested 28 Oct 2026</p>
-          <p>🌾 Farmer: Ade Bello</p>
-          <div class="price">0.05 BOT / kg</div>
-          <div class="actions">
-            <button class="btn" onclick="buyLot(1)" style="flex:1">Buy Lot</button>
-            <button class="btn btn-outline" onclick="viewTrace(1)">Trace</button>
+  <footer class="lp-footer">
+    <div class="lp-footer-brand">🌾 AgriChain</div>
+    <div class="lp-footer-links">
+      <a href="https://botchain.ai" target="_blank">🌐 botchain.ai ↗</a>
+      <a href="https://scan.botchain.ai" target="_blank">🔍 scan.botchain.ai ↗</a>
+      <a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank">📄 Contract ↗</a>
+      <a href="https://rpc.botchain.ai" target="_blank">⚡ rpc.botchain.ai</a>
+    </div>
+    <div class="lp-footer-copy">© 2026 AgriChain · Deployed on BOT Chain · Chain ID 677</div>
+  </footer>
+
+</div><!-- /landing -->
+
+
+<!-- ══════════════════════════════════════════ APP ══════ -->
+<div id="app">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand" onclick="backToLanding()">🌾 <span>AgriChain</span><span class="dot">.</span></div>
+      <div class="chain-badge">BOT Chain · Chain ID 677</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" data-section="dashboard" onclick="showSection('dashboard',this)">
+        <span class="icon">📊</span><span>Dashboard</span>
+      </div>
+      <div class="nav-section-label">Farmers</div>
+      <div class="nav-item" data-section="register" onclick="showSection('register',this)">
+        <span class="icon">🧑‍🌾</span><span>Register Farmer</span>
+      </div>
+      <div class="nav-section-label">Supply Chain</div>
+      <div class="nav-item" data-section="create" onclick="showSection('create',this)">
+        <span class="icon">📦</span><span>Create Lot</span>
+      </div>
+      <div class="nav-item" data-section="marketplace" onclick="showSection('marketplace',this)">
+        <span class="icon">🛒</span><span>Marketplace</span>
+      </div>
+      <div class="nav-item" data-section="trace" onclick="showSection('trace',this)">
+        <span class="icon">🔍</span><span>Trace Lot</span>
+      </div>
+      <div class="nav-item" data-section="checkpoint" onclick="showSection('checkpoint',this)">
+        <span class="icon">📍</span><span>Add Checkpoint</span>
+      </div>
+    </div>
+    <div class="sidebar-wallet">
+      <button id="walletBtn">🟢 Connected</button>
+      <div id="walletAddress">—</div>
+    </div>
+    <div class="sidebar-footer-links">
+      <a href="https://botchain.ai" target="_blank">🌐 botchain.ai ↗</a>
+      <a href="https://scan.botchain.ai" target="_blank">🔍 scan.botchain.ai ↗</a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button id="menuToggle" onclick="openSidebar()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-chain">
+        <div class="chain-dot"></div>
+        <span>BOT Chain Mainnet &nbsp;·&nbsp; <a href="https://scan.botchain.ai" target="_blank" style="color:var(--smoke);text-decoration:none;">scan.botchain.ai ↗</a></span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="sec-dashboard" class="section active">
+        <div class="section-header">
+          <h2>Platform Overview</h2>
+          <p>Live data from AgriChain smart contract on BOT Chain</p>
+        </div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="val" id="stat-lots">—</div><div class="lbl">Total Lots</div><div class="change">↑ lot counter</div></div>
+          <div class="stat-box"><div class="val" id="stat-fee">—</div><div class="lbl">Platform Fee</div><div class="change">basis points</div></div>
+          <div class="stat-box"><div class="val">677</div><div class="lbl">Chain ID</div><div class="change">BOT Chain</div></div>
+          <div class="stat-box"><div class="val" id="stat-wallet" style="font-size:0.85rem;padding-top:0.25rem">—</div><div class="lbl">Connected Wallet</div><div class="change">BOT Chain</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Recent On-Chain Activity</div></div>
+            <div class="table-wrap">
+              <table class="activity-table">
+                <thead><tr><th>Event</th><th>Detail</th><th>Status</th></tr></thead>
+                <tbody id="activityFeed">
+                  <tr><td><span class="pill pill-green">Connected</span></td><td>Wallet connected to BOT Chain</td><td>Live</td></tr>
+                  <tr><td><span class="pill pill-blue">Chain</span></td><td>BOT Chain · Chain ID 677</td><td>Live</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Contract Info</div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">Address</div><div class="lot-detail-val" style="font-size:0.7rem;font-family:monospace"><a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank" style="color:var(--canopy)">0xCc04ABDB…1260e18 ↗</a></div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">Network</div><div class="lot-detail-val">BOT Chain Mainnet</div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">RPC</div><div class="lot-detail-val" style="font-size:0.72rem;font-family:monospace"><a href="https://rpc.botchain.ai" target="_blank" style="color:var(--canopy)">rpc.botchain.ai ↗</a></div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">Explorer</div><div class="lot-detail-val"><a href="https://scan.botchain.ai" target="_blank" style="color:var(--canopy)">scan.botchain.ai ↗</a></div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">BOT Chain</div><div class="lot-detail-val"><a href="https://botchain.ai" target="_blank" style="color:var(--canopy)">botchain.ai ↗</a></div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">Lot Counter</div><div class="lot-detail-val" id="contractLotCounter">Loading…</div></div>
+            <div class="lot-detail-row"><div class="lot-detail-label">Platform Fee</div><div class="lot-detail-val" id="contractFee">Loading…</div></div>
           </div>
         </div>
+      </div>
 
-        <div class="lot-card">
-          <span class="tag tag-yellow">In Transit</span>
-          <h4>🌽 Maize – Yellow Sweet</h4>
-          <p>📍 Benue, Benue State</p>
-          <p>⚖️ 1200 kg · Harvested 20 Oct 2026</p>
-          <p>🌾 Farmer: Chinwe Nwosu</p>
-          <div class="price">0.02 BOT / kg</div>
-          <div class="actions">
-            <button class="btn" onclick="buyLot(2)" style="flex:1">Buy Lot</button>
-            <button class="btn btn-outline" onclick="viewTrace(2)">Trace</button>
+      <!-- REGISTER -->
+      <div id="sec-register" class="section">
+        <div class="section-header"><h2>Register as Farmer</h2><p>Your wallet address becomes your on-chain farmer identity.</p></div>
+        <div class="card" style="max-width:580px">
+          <div class="form-grid">
+            <div class="field"><label>Full Name</label><input id="fName" placeholder="e.g. Ade Bello"/></div>
+            <div class="field"><label>Farm Location</label><input id="fLoc" placeholder="e.g. Ibadan, Oyo State"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="registerFarmer()">Register on BOT Chain</button>
+          <div id="regResult" style="margin-top:0.75rem"></div>
+        </div>
+        <div class="card" style="max-width:580px; margin-top:1rem">
+          <div class="card-header"><div class="card-title">Look Up Farmer</div></div>
+          <div class="form-grid cols-1">
+            <div class="field"><label>Farmer Wallet Address</label><input id="lookupAddr" placeholder="0x…"/></div>
+          </div>
+          <button class="btn btn-outline" onclick="lookupFarmer()">Fetch Farmer Info</button>
+          <div id="farmerResult" style="margin-top:0.75rem"></div>
+        </div>
+      </div>
+
+      <!-- CREATE LOT -->
+      <div id="sec-create" class="section">
+        <div class="section-header"><h2>Create Produce Lot</h2><p>Mint a new on-chain produce lot. You must be a verified farmer.</p></div>
+        <div class="card" style="max-width:680px">
+          <div class="form-grid">
+            <div class="field"><label>Crop Type</label><input id="cropType" placeholder="e.g. Tomato"/></div>
+            <div class="field"><label>Variety</label><input id="variety" placeholder="e.g. Roma"/></div>
+          </div>
+          <div class="form-grid cols-3">
+            <div class="field"><label>Weight (kg)</label><input id="weight" type="number" placeholder="500"/></div>
+            <div class="field"><label>Harvest Date</label><input id="harvest" type="date"/></div>
+            <div class="field"><label>Price / kg (BOT wei)</label><input id="price" placeholder="50000000000000000"/></div>
+          </div>
+          <div class="form-grid cols-1">
+            <div class="field"><label>Farm Location</label><input id="lotLoc" placeholder="e.g. Ibadan Farm, Oyo State"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="createLot()">Create Lot on BOT Chain</button>
+          <div id="createResult" style="margin-top:0.75rem"></div>
+        </div>
+      </div>
+
+      <!-- MARKETPLACE -->
+      <div id="sec-marketplace" class="section">
+        <div class="section-header"><h2>Produce Marketplace</h2><p>Live lots from AgriChain contract on BOT Chain.</p></div>
+        <div class="card" style="margin-bottom:1rem">
+          <div style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap">
+            <div class="field" style="flex:0 0 130px"><label>From Lot ID</label><input id="mktFrom" type="number" value="1" min="1"/></div>
+            <div class="field" style="flex:0 0 130px"><label>To Lot ID</label><input id="mktTo" type="number" value="10" min="1"/></div>
+            <button class="btn btn-outline" onclick="loadMarketplace()">Load Lots</button>
           </div>
         </div>
+        <div id="lotGrid" class="lot-grid">
+          <div class="empty-state"><div class="empty-icon">🌱</div><p>Load lots to see the marketplace.</p></div>
+        </div>
+      </div>
 
-        <div class="lot-card">
-          <span class="tag tag-green">Verified Farmer</span>
-          <h4>🍠 Yam – Puna Variety</h4>
-          <p>📍 Ogbomoso, Oyo State</p>
-          <p>⚖️ 800 kg · Harvested 15 Oct 2026</p>
-          <p>🌾 Farmer: Kehinde Farms</p>
-          <div class="price">0.04 BOT / kg</div>
-          <div class="actions">
-            <button class="btn" onclick="buyLot(3)" style="flex:1">Buy Lot</button>
-            <button class="btn btn-outline" onclick="viewTrace(3)">Trace</button>
+      <!-- TRACE -->
+      <div id="sec-trace" class="section">
+        <div class="section-header"><h2>Trace a Lot</h2><p>Fetch the full on-chain supply chain history for any lot.</p></div>
+        <div class="card" style="max-width:420px">
+          <div class="form-grid cols-1">
+            <div class="field"><label>Lot ID</label><input id="traceId" type="number" placeholder="Enter lot ID"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="traceLot()">Fetch from BOT Chain</button>
+        </div>
+        <div id="traceResult" style="display:none" class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Lot Details</div></div>
+            <div id="traceDetails"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Supply Chain Journey</div>
+              <div id="traceCount" class="pill pill-green"></div>
+            </div>
+            <div class="trace-flow" id="traceTimeline"></div>
           </div>
         </div>
+      </div>
 
+      <!-- CHECKPOINT -->
+      <div id="sec-checkpoint" class="section">
+        <div class="section-header"><h2>Add Checkpoint</h2><p>Record a supply chain checkpoint for an existing lot.</p></div>
+        <div class="card" style="max-width:580px">
+          <div class="form-grid">
+            <div class="field"><label>Lot ID</label><input id="cpLotId" type="number" placeholder="e.g. 1"/></div>
+            <div class="field"><label>Location</label><input id="cpLoc" placeholder="e.g. Oyo Toll Gate"/></div>
+          </div>
+          <div class="form-grid cols-1">
+            <div class="field"><label>Action</label><input id="cpAction" placeholder="e.g. Quality Check Passed"/></div>
+          </div>
+          <div class="form-grid cols-1">
+            <div class="field"><label>Notes (optional)</label><textarea id="cpNotes" placeholder="Additional details…"></textarea></div>
+          </div>
+          <button class="btn btn-primary" onclick="addCheckpoint()">Submit Checkpoint</button>
+          <div id="cpResult" style="margin-top:0.75rem"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- App Footer (desktop) -->
+  <footer class="app-footer">
+    <div class="app-footer-left">AgriChain · <a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank" style="color:var(--canopy);font-family:monospace;font-size:0.68rem">0xCc04ABDB…1260e18 ↗</a> · BOT Chain · Chain ID 677</div>
+    <div class="app-footer-links">
+      <a href="https://botchain.ai" target="_blank">🌐 botchain.ai ↗</a>
+      <a href="https://scan.botchain.ai" target="_blank">🔍 scan.botchain.ai ↗</a>
+      <a href="https://scan.botchain.ai/address/0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18" target="_blank">📄 Contract ↗</a>
+      <a href="https://rpc.botchain.ai" target="_blank">⚡ RPC ↗</a>
+    </div>
+  </footer>
+
+  <!-- Bottom Nav (mobile) -->
+  <div id="bottomNav">
+    <div class="bottom-nav-inner">
+      <div class="bnav-item active" data-section="dashboard" onclick="showSection('dashboard',this)">
+        <span class="bicon">📊</span><span>Dashboard</span>
+      </div>
+      <div class="bnav-item" data-section="marketplace" onclick="showSection('marketplace',this)">
+        <span class="bicon">🛒</span><span>Market</span>
+      </div>
+      <div class="bnav-item" data-section="create" onclick="showSection('create',this)">
+        <span class="bicon">📦</span><span>Create</span>
+      </div>
+      <div class="bnav-item" data-section="trace" onclick="showSection('trace',this)">
+        <span class="bicon">🔍</span><span>Trace</span>
+      </div>
+      <div class="bnav-item" data-section="register" onclick="showSection('register',this)">
+        <span class="bicon">🧑‍🌾</span><span>Farmer</span>
+      </div>
+      <div class="bnav-item" data-section="checkpoint" onclick="showSection('checkpoint',this)">
+        <span class="bicon">📍</span><span>Checkpoint</span>
       </div>
     </div>
   </div>
 
-  <!-- Trace -->
-  <div id="trace" class="section">
-    <div class="card">
-      <h3>🔍 Trace a Produce Lot</h3>
-      <div class="form-row">
-        <label>Lot ID <input id="traceId" placeholder="Enter lot ID e.g. 1" type="number" /></label>
-      </div>
-      <button class="btn" onclick="traceLot()">Fetch Trace from Botchain</button>
-    </div>
-    <div class="card" id="traceResult" style="display:none">
-      <h3>📋 Lot #<span id="traceNum"></span> – Supply Chain History</h3>
-      <ul class="timeline" id="traceTimeline"></ul>
-    </div>
-  </div>
+</div><!-- /app -->
 
-</div>
-
-<footer>AgriChain is deployed on Botchain · Smart contract: 0xAgriChain… · Open source</footer>
+<div id="txLog"></div>
 
 <script>
-  const traceData = {
-    1: [
-      { action: "Lot Registered", location: "Ibadan Farm, Oyo State", ts: "Oct 28 2026, 07:00", notes: "Initial registration on AgriChain" },
-      { action: "Quality Check Passed", location: "Ibadan Farm", ts: "Oct 28 2026, 10:30", notes: "Grade A – moisture 14%, no pesticide residue" },
-      { action: "Loaded to Truck", location: "Ibadan Farm Gate", ts: "Oct 29 2026, 06:00", notes: "Cold chain transport initiated" },
-      { action: "Checkpoint – Oyo Toll", location: "Oyo Expressway", ts: "Oct 29 2026, 09:15", notes: "" },
-      { action: "Arrived Warehouse", location: "Agbowo Cold Storage, Ibadan", ts: "Oct 29 2026, 12:00", notes: "Temperature: 8°C" },
-    ],
-    2: [
-      { action: "Lot Registered", location: "Makurdi, Benue State", ts: "Oct 20 2026, 08:00", notes: "1200 kg yellow maize" },
-      { action: "Dried & Bagged", location: "Makurdi Drying Yard", ts: "Oct 22 2026, 11:00", notes: "Moisture reduced to 12%" },
-      { action: "In Transit", location: "Makurdi – Lagos Road", ts: "Oct 23 2026, 06:00", notes: "ETA 2 days" },
-    ],
-    3: [
-      { action: "Lot Registered", location: "Ogbomoso, Oyo State", ts: "Oct 15 2026, 09:00", notes: "800 kg Puna yam" },
-      { action: "Quality Inspection", location: "Ogbomoso Farm", ts: "Oct 15 2026, 14:00", notes: "Premium grade, no rot" },
-    ]
-  };
+const CHAIN_ID = 677;
+const RPC_URL  = 'https://rpc.botchain.ai';
+const EXPLORER = 'https://scan.botchain.ai';
+const CONTRACT = '0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18';
 
-  function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+const ABI = [
+  "function registerFarmer(string _name, string _location) nonpayable",
+  "function createLot(string _cropType, string _variety, uint256 _weightKg, uint256 _harvestDate, string _farmLocation, uint256 _pricePerKgWei) nonpayable returns (uint256)",
+  "function purchaseLot(uint256 _lotId) payable",
+  "function addCheckpoint(uint256 _lotId, string _location, string _action, string _notes) nonpayable",
+  "function getLot(uint256 _lotId) view returns (tuple(uint256 id, address farmer, string cropType, string variety, uint256 weightKg, uint256 harvestDate, string farmLocation, uint8 status, uint256 pricePerKgWei, address currentOwner, uint256 createdAt))",
+  "function getLotCheckpoints(uint256 _lotId) view returns (tuple(address handler, string location, string action, uint256 timestamp, string notes)[])",
+  "function farmers(address) view returns (address wallet, string name, string location, uint256 registeredAt, bool verified, uint256 totalLotsCreated)",
+  "function lotCounter() view returns (uint256)",
+  "function platformFeeBps() view returns (uint256)"
+];
+
+let provider, signer, contract, readContract, walletAddress;
+const LOT_STATUS = ['Available','Reserved','In Transit','Delivered','Sold','Disputed'];
+const CROP_EMOJI = { tomato:'🍅', maize:'🌽', yam:'🍠', cassava:'🥔', pepper:'🌶️', onion:'🧅', rice:'🍚', cocoa:'🫘', plantain:'🍌', groundnut:'🥜', cowpea:'🫛', sorghum:'🌾' };
+function cropEmoji(t) { const k=t.toLowerCase(); for(const [c,e] of Object.entries(CROP_EMOJI)) if(k.includes(c)) return e; return '🌾'; }
+
+async function initReadProvider() {
+  try {
+    const rp = new ethers.JsonRpcProvider(RPC_URL);
+    readContract = new ethers.Contract(CONTRACT, ABI, rp);
+    const [counter, feeBps] = await Promise.all([readContract.lotCounter(), readContract.platformFeeBps()]);
+    const c = counter.toString();
+    document.getElementById('heroLots').textContent = c;
+    document.getElementById('stat-lots').textContent = c;
+    document.getElementById('contractLotCounter').textContent = c;
+    const feeStr = feeBps.toString() + ' bps (' + (Number(feeBps)/100).toFixed(1) + '%)';
+    document.getElementById('contractFee').textContent = feeStr;
+    document.getElementById('stat-fee').textContent = (Number(feeBps)/100).toFixed(1) + '%';
+  } catch(e) { console.warn('Read provider:', e); }
+}
+
+function showApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+}
+function backToLanding() {
+  closeSidebar();
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('landing').style.display = 'flex';
+}
+
+/* Mobile nav */
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+
+async function connectWallet() {
+  if (!window.ethereum) { alert('No wallet detected. Install MetaMask or a BOT Chain-compatible wallet.'); return; }
+  const lBtn = document.getElementById('landingConnectBtn');
+  const lSpinner = document.getElementById('landingConnectSpinner');
+  if (lBtn) { lBtn.disabled = true; lSpinner.style.display = 'inline-block'; }
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + CHAIN_ID.toString(16) }] });
+    } catch(sw) {
+      if (sw.code === 4902) {
+        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x' + CHAIN_ID.toString(16), chainName: 'BOT Chain Mainnet', rpcUrls: [RPC_URL], blockExplorerUrls: [EXPLORER], nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 } }] });
+      } else throw sw;
+    }
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer   = await provider.getSigner();
+    contract = new ethers.Contract(CONTRACT, ABI, signer);
+    walletAddress = await signer.getAddress();
+    const short = walletAddress.slice(0,6) + '…' + walletAddress.slice(-4);
+    document.getElementById('walletBtn').textContent = '🟢 ' + short;
+    document.getElementById('walletAddress').textContent = short;
+    document.getElementById('stat-wallet').textContent = short;
+    window.ethereum.on('accountsChanged', () => location.reload());
+    window.ethereum.on('chainChanged',    () => location.reload());
+    showApp();
+    await loadContractStats();
+    toast('🌿', 'Wallet connected — welcome to AgriChain!');
+  } catch(e) {
+    if (lBtn) { lBtn.disabled = false; lSpinner.style.display = 'none'; }
+    if (e.code !== 4001) alert('Connection failed: ' + (e.message || e));
   }
+}
 
-  function registerFarmer() {
-    const name = document.getElementById('fName').value;
-    const loc  = document.getElementById('fLoc').value;
-    if (!name || !loc) { alert('Please fill all fields'); return; }
-    alert(`✅ Registering ${name} on Botchain...\nTx simulated. Await admin verification.`);
+async function loadContractStats() {
+  try {
+    const [counter, feeBps] = await Promise.all([(readContract||contract).lotCounter(), (readContract||contract).platformFeeBps()]);
+    const c = counter.toString();
+    document.getElementById('stat-lots').textContent = c;
+    document.getElementById('contractLotCounter').textContent = c;
+    const feeStr = feeBps.toString() + ' bps (' + (Number(feeBps)/100).toFixed(1) + '%)';
+    document.getElementById('contractFee').textContent = feeStr;
+    document.getElementById('stat-fee').textContent = (Number(feeBps)/100).toFixed(1) + '%';
+  } catch(e) { console.warn('Stats:', e); }
+}
+
+async function registerFarmer() {
+  if (!contract) { toast('⚠','No wallet connected'); return; }
+  const name = document.getElementById('fName').value.trim();
+  const loc  = document.getElementById('fLoc').value.trim();
+  if (!name || !loc) { toast('⚠','Fill in name and location'); return; }
+  try {
+    setResult('regResult','info','⏳ Sending transaction…');
+    const tx = await contract.registerFarmer(name, loc);
+    toast('📡','Tx submitted', tx.hash);
+    const receipt = await tx.wait();
+    setResult('regResult','success','✅ Registered! <a href="' + EXPLORER + '/tx/' + receipt.hash + '" target="_blank" style="color:var(--canopy)">View tx ↗</a> — Await admin verification.');
+    toast('✅','Farmer registered!', receipt.hash);
+  } catch(e) { setResult('regResult','error','❌ ' + parseError(e)); toast('❌', parseError(e)); }
+}
+
+async function lookupFarmer() {
+  const addr = document.getElementById('lookupAddr').value.trim();
+  if (!addr) { toast('⚠','Enter an address'); return; }
+  const rc = readContract||contract;
+  if (!rc) { toast('⚠','No provider'); return; }
+  try {
+    setResult('farmerResult','info','⏳ Fetching…');
+    const f = await rc.farmers(addr);
+    if (f.wallet === '0x0000000000000000000000000000000000000000') { setResult('farmerResult','warning','⚠ No farmer found.'); return; }
+    document.getElementById('farmerResult').innerHTML = `<div class="card" style="margin-top:0;padding:0.75rem">
+      <div class="lot-detail-row"><div class="lot-detail-label">Name</div><div class="lot-detail-val">${f.name}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Location</div><div class="lot-detail-val">${f.location}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Verified</div><div class="lot-detail-val">${f.verified ? '<span class="pill pill-green">✓ Verified</span>' : '<span class="pill pill-amber">Pending</span>'}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Total Lots</div><div class="lot-detail-val">${f.totalLotsCreated.toString()}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Registered</div><div class="lot-detail-val">${new Date(Number(f.registeredAt)*1000).toLocaleDateString()}</div></div>
+    </div>`;
+  } catch(e) { setResult('farmerResult','error','❌ ' + parseError(e)); }
+}
+
+async function createLot() {
+  if (!contract) { toast('⚠','No wallet connected'); return; }
+  const crop=document.getElementById('cropType').value.trim(), variety=document.getElementById('variety').value.trim(),
+        weight=document.getElementById('weight').value, harvest=document.getElementById('harvest').value,
+        loc=document.getElementById('lotLoc').value.trim(), price=document.getElementById('price').value;
+  if (!crop||!weight||!harvest||!loc||!price) { toast('⚠','Fill all required fields'); return; }
+  try {
+    setResult('createResult','info','⏳ Sending transaction…');
+    const tx = await contract.createLot(crop, variety, BigInt(weight), BigInt(Math.floor(new Date(harvest).getTime()/1000)), loc, BigInt(price));
+    toast('📡','Tx submitted', tx.hash);
+    const receipt = await tx.wait();
+    setResult('createResult','success','✅ Lot created! <a href="' + EXPLORER + '/tx/' + receipt.hash + '" target="_blank" style="color:var(--canopy)">View tx ↗</a>');
+    toast('✅','Lot created!', receipt.hash);
+    await loadContractStats();
+  } catch(e) { setResult('createResult','error','❌ ' + parseError(e)); toast('❌', parseError(e)); }
+}
+
+async function loadMarketplace() {
+  const rc = readContract||contract;
+  if (!rc) { toast('⚠','No RPC available'); return; }
+  const from=parseInt(document.getElementById('mktFrom').value)||1, to=parseInt(document.getElementById('mktTo').value)||10;
+  const grid = document.getElementById('lotGrid');
+  grid.innerHTML = '<div class="empty-state"><div class="empty-icon"><span class="spinner" style="border-color:var(--border);border-top-color:var(--canopy);width:24px;height:24px;border-width:3px"></span></div><p>Loading lots from BOT Chain…</p></div>';
+  const cards = [];
+  for (let i=from; i<=to; i++) { try { const lot=await rc.getLot(i); if(lot.id.toString()!=='0') cards.push(renderLotCard(lot)); } catch(e){} }
+  grid.innerHTML = cards.length ? cards.join('') : '<div class="empty-state"><div class="empty-icon">🌱</div><p>No lots found in that range.</p></div>';
+}
+
+function renderLotCard(lot) {
+  const id=lot.id.toString(), status=LOT_STATUS[lot.status]||'Unknown';
+  const pillClass=lot.status==0?'pill-green':lot.status==2?'pill-amber':lot.status==4?'pill-gray':'pill-blue';
+  const bandClass=lot.status==0?'band-green':lot.status==2?'band-amber':'band-blue';
+  const harvestDate=new Date(Number(lot.harvestDate)*1000).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+  const priceBOT=ethers.formatEther(lot.pricePerKgWei.toString());
+  const em=cropEmoji(lot.cropType), short=lot.farmer.slice(0,6)+'…'+lot.farmer.slice(-4);
+  return `<div class="lot-card">
+    <div class="lot-card-band ${bandClass}"></div>
+    <div class="lot-card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+        <span class="lot-emoji">${em}</span><span class="pill ${pillClass}">${status}</span>
+      </div>
+      <div class="lot-name">Lot #${id} · ${lot.cropType}${lot.variety?' – '+lot.variety:''}</div>
+      <div class="lot-meta">📍 ${lot.farmLocation}</div>
+      <div class="lot-meta">⚖️ ${lot.weightKg.toString()} kg · ${harvestDate}</div>
+      <div class="lot-meta">🧑‍🌾 <span style="font-family:monospace;font-size:0.68rem">${short}</span></div>
+      <div class="lot-price">${priceBOT} BOT <span>/ kg</span></div>
+    </div>
+    <div class="lot-card-footer">
+      ${lot.status==0?`<button class="btn btn-amber btn-sm" style="flex:1" onclick="buyLot(${id},'${lot.pricePerKgWei}','${lot.weightKg}')">Buy Lot</button>`:`<button class="btn btn-outline btn-sm" style="flex:1" disabled>${status}</button>`}
+      <button class="btn btn-outline btn-sm" onclick="quickTrace(${id})">Trace</button>
+    </div>
+  </div>`;
+}
+
+async function buyLot(id, pricePerKgWei, weightKg) {
+  if (!contract) { toast('⚠','Connect wallet first'); return; }
+  try {
+    const totalWei=BigInt(pricePerKgWei.toString())*BigInt(weightKg.toString());
+    if (!confirm(`Purchase Lot #${id}?\n\nTotal: ${ethers.formatEther(totalWei)} BOT`)) return;
+    toast('📡','Sending purchase…');
+    const tx=await contract.purchaseLot(id,{value:totalWei});
+    toast('⏳','Waiting for confirmation…',tx.hash);
+    const receipt=await tx.wait();
+    toast('✅',`Lot #${id} purchased!`,receipt.hash);
+    await loadMarketplace();
+  } catch(e) { toast('❌', parseError(e)); }
+}
+
+async function quickTrace(id) {
+  document.getElementById('traceId').value = id;
+  showSection('trace', document.querySelector('[data-section="trace"]'));
+  await traceLot();
+}
+
+async function traceLot() {
+  const rc=readContract||contract;
+  if (!rc) { toast('⚠','No RPC available'); return; }
+  const lotId=parseInt(document.getElementById('traceId').value);
+  if (!lotId) { toast('⚠','Enter a lot ID'); return; }
+  try {
+    document.getElementById('traceResult').style.display='none';
+    const [lot,checkpoints]=await Promise.all([rc.getLot(lotId),rc.getLotCheckpoints(lotId)]);
+    if (lot.id.toString()==='0') { toast('⚠','Lot not found'); return; }
+    const status=LOT_STATUS[lot.status]||'Unknown';
+    document.getElementById('traceDetails').innerHTML=`
+      <div class="lot-detail-row"><div class="lot-detail-label">Lot ID</div><div class="lot-detail-val">#${lot.id}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Crop</div><div class="lot-detail-val">${cropEmoji(lot.cropType)} ${lot.cropType} ${lot.variety}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Weight</div><div class="lot-detail-val">${lot.weightKg.toString()} kg</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Farm Location</div><div class="lot-detail-val">${lot.farmLocation}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Harvest Date</div><div class="lot-detail-val">${new Date(Number(lot.harvestDate)*1000).toLocaleDateString()}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Status</div><div class="lot-detail-val"><span class="pill ${lot.status==0?'pill-green':lot.status==2?'pill-amber':'pill-blue'}">${status}</span></div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Price / kg</div><div class="lot-detail-val">${ethers.formatEther(lot.pricePerKgWei.toString())} BOT</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Farmer</div><div class="lot-detail-val" style="font-family:monospace;font-size:0.7rem"><a href="${EXPLORER}/address/${lot.farmer}" target="_blank" style="color:var(--canopy)">${lot.farmer} ↗</a></div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Owner</div><div class="lot-detail-val" style="font-family:monospace;font-size:0.7rem">${lot.currentOwner.slice(0,10)}…</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Created</div><div class="lot-detail-val">${new Date(Number(lot.createdAt)*1000).toLocaleString()}</div></div>`;
+    document.getElementById('traceCount').textContent=checkpoints.length+' checkpoint'+(checkpoints.length!==1?'s':'');
+    document.getElementById('traceTimeline').innerHTML=checkpoints.length
+      ? checkpoints.map((cp,i)=>`<div class="trace-step">
+          <div class="trace-step-left"><div class="trace-node">${i+1}</div><div class="trace-line"></div></div>
+          <div class="trace-content">
+            <div class="trace-action">${cp.action}</div>
+            <div class="trace-loc">📍 ${cp.location}</div>
+            ${cp.notes?`<div class="trace-notes">${cp.notes}</div>`:''}
+            <div class="trace-ts">${new Date(Number(cp.timestamp)*1000).toLocaleString()} · <a href="${EXPLORER}/address/${cp.handler}" target="_blank" style="color:var(--canopy);font-family:monospace;font-size:0.67rem">${cp.handler.slice(0,10)}…</a></div>
+          </div></div>`).join('')
+      : '<div class="empty-state" style="padding:1rem"><p>No checkpoints recorded yet.</p></div>';
+    document.getElementById('traceResult').style.display='grid';
+  } catch(e) { console.error(e); toast('❌','Could not fetch lot: '+parseError(e)); }
+}
+
+async function addCheckpoint() {
+  if (!contract) { toast('⚠','Connect wallet first'); return; }
+  const lotId=document.getElementById('cpLotId').value, loc=document.getElementById('cpLoc').value.trim(),
+        action=document.getElementById('cpAction').value.trim(), notes=document.getElementById('cpNotes').value.trim();
+  if (!lotId||!loc||!action) { toast('⚠','Fill lot ID, location, and action'); return; }
+  try {
+    setResult('cpResult','info','⏳ Sending transaction…');
+    const tx=await contract.addCheckpoint(BigInt(lotId),loc,action,notes);
+    toast('📡','Tx submitted',tx.hash);
+    const receipt=await tx.wait();
+    setResult('cpResult','success','✅ Checkpoint added! <a href="'+EXPLORER+'/tx/'+receipt.hash+'" target="_blank" style="color:var(--canopy)">View tx ↗</a>');
+    toast('✅','Checkpoint recorded on BOT Chain!',receipt.hash);
+  } catch(e) { setResult('cpResult','error','❌ '+parseError(e)); toast('❌',parseError(e)); }
+}
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  // Update sidebar nav items
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const sidebarItem = document.querySelector('#sidebar .nav-item[data-section="'+id+'"]');
+  if (sidebarItem) sidebarItem.classList.add('active');
+  // Update bottom nav items
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  const bnavItem = document.querySelector('.bnav-item[data-section="'+id+'"]');
+  if (bnavItem) bnavItem.classList.add('active');
+  const titles = { dashboard:'Dashboard', register:'Register Farmer', create:'Create Lot', marketplace:'Marketplace', trace:'Trace Lot', checkpoint:'Add Checkpoint' };
+  document.getElementById('topbarTitle').textContent = titles[id] || id;
+  // Close sidebar on mobile after navigation
+  closeSidebar();
+  // Scroll content to top
+  window.scrollTo(0, 0);
+}
+
+function setResult(id, type, msg) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+function toast(icon, msg, txHash) {
+  const log=document.getElementById('txLog'), el=document.createElement('div');
+  el.className='tx-toast';
+  el.innerHTML=`<span class="tx-icon">${icon}</span><div><div>${msg}</div>${txHash?`<a class="tx-link" href="${EXPLORER}/tx/${txHash}" target="_blank">View on scan.botchain.ai ↗</a>`:''}</div>`;
+  log.appendChild(el);
+  setTimeout(()=>el.remove(),7000);
+}
+function parseError(e) {
+  if (e.reason) return e.reason;
+  if (e.message) {
+    if (e.message.includes('user rejected')) return 'Transaction rejected.';
+    if (e.message.includes('insufficient funds')) return 'Insufficient BOT balance.';
+    return e.message.length>80 ? e.message.slice(0,80)+'…' : e.message;
   }
+  return 'Unknown error';
+}
 
-  function createLot() {
-    const crop = document.getElementById('cropType').value;
-    if (!crop) { alert('Please fill all fields'); return; }
-    alert(`✅ Lot for ${crop} submitted to Botchain!\nLot ID will be assigned after tx confirmation.`);
-  }
-
-  function buyLot(id) {
-    alert(`🛒 Purchasing Lot #${id}...\nConnecting to Botchain wallet and calling purchaseLot(${id})...`);
-  }
-
-  function viewTrace(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('trace').classList.add('active');
-    document.getElementById('traceId').value = id;
-    traceLot(id);
-  }
-
-  function traceLot(id) {
-    const lotId = id || parseInt(document.getElementById('traceId').value);
-    if (!lotId) { alert('Enter a lot ID'); return; }
-    const data = traceData[lotId];
-    if (!data) { alert('Lot not found'); return; }
-
-    document.getElementById('traceNum').textContent = lotId;
-    const tl = document.getElementById('traceTimeline');
-    tl.innerHTML = data.map(c => `
-      <li>
-        <strong>${c.action}</strong> – ${c.location}
-        ${c.notes ? `<br><em>${c.notes}</em>` : ''}
-        <div class="ts">${c.ts}</div>
-      </li>
-    `).join('');
-    document.getElementById('traceResult').style.display = 'block';
-  }
+initReadProvider();
 </script>
 </body>
 </html>

@@ -627,6 +627,16 @@ body {
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── WALLET PICKER ── */
+.wallet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.wallet-modal { background: #fff; color: var(--forest); border-radius: 14px; padding: 1.25rem; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+.wallet-modal h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin-bottom: 0.25rem; }
+.wallet-modal p { font-size: 0.75rem; color: var(--smoke); margin-bottom: 0.4rem; }
+.wallet-option { display: flex; align-items: center; gap: 0.75rem; justify-content: flex-start; width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--paper); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--forest); min-height: 48px; }
+.wallet-option:hover { border-color: var(--canopy); background: var(--mist); }
+.wallet-option img { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
+.wallet-cancel { margin-top: 0.25rem; background: none; border: none; color: var(--smoke); font-size: 0.8rem; cursor: pointer; padding: 0.5rem; font-family: 'Inter', sans-serif; }
+
 /* ── APP FOOTER ── */
 .app-footer {
   background: white;
@@ -1103,10 +1113,81 @@ const ABI = [
   "function platformFeeBps() view returns (uint256)"
 ];
 
-let provider, signer, contract, readContract, walletAddress;
+let provider, signer, contract, readContract, walletAddress, ethProvider = null;
 const LOT_STATUS = ['Available','Reserved','In Transit','Delivered','Sold','Disputed'];
 const CROP_EMOJI = { tomato:'🍅', maize:'🌽', yam:'🍠', cassava:'🥔', pepper:'🌶️', onion:'🧅', rice:'🍚', cocoa:'🫘', plantain:'🍌', groundnut:'🥜', cowpea:'🫛', sorghum:'🌾' };
 function cropEmoji(t) { const k=t.toLowerCase(); for(const [c,e] of Object.entries(CROP_EMOJI)) if(k.includes(c)) return e; return '🌾'; }
+
+/* ══════════════════════════════════════════
+   UNIVERSAL WALLET DISCOVERY
+   - EIP-6963 (modern multi-wallet standard)
+   - Legacy window.ethereum / providers[] fallback
+   - Proxy-safe event listeners (Brave, etc.)
+══════════════════════════════════════════ */
+const discovered = new Map();
+
+window.addEventListener('eip6963:announceProvider', e => {
+  try { if (e.detail && e.detail.info && e.detail.provider) discovered.set(e.detail.info.uuid, e.detail); } catch (_) {}
+});
+function requestWallets() {
+  try { window.dispatchEvent(new Event('eip6963:requestProvider')); } catch (_) {}
+}
+requestWallets();
+
+function safeListen(p, evt, handler) {
+  try { p.on(evt, handler); return; } catch (_) {}
+  try { p.addListener(evt, handler); return; } catch (_) {}
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function chooseWallet(list) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'wallet-overlay';
+    const box = document.createElement('div');
+    box.className = 'wallet-modal';
+    box.innerHTML = '<h3>Choose a wallet</h3><p>Select the wallet you want to connect with.</p>';
+    list.forEach(w => {
+      const b = document.createElement('button');
+      b.className = 'wallet-option';
+      const icon = (w.info.icon && /^data:image\//.test(w.info.icon)) ? '<img src="' + w.info.icon + '" alt=""/>' : '';
+      b.innerHTML = icon + '<span>' + escapeHtml(w.info.name) + '</span>';
+      b.onclick = () => { overlay.remove(); resolve(w.provider); };
+      box.appendChild(b);
+    });
+    const cancel = document.createElement('button');
+    cancel.className = 'wallet-cancel';
+    cancel.textContent = 'Cancel';
+    cancel.onclick = () => { overlay.remove(); resolve(null); };
+    box.appendChild(cancel);
+    overlay.appendChild(box);
+    overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); resolve(null); } };
+    document.body.appendChild(overlay);
+  });
+}
+
+async function getEthProvider() {
+  requestWallets();
+  // give extensions a moment to announce themselves
+  await new Promise(r => setTimeout(r, 350));
+  const list = [...discovered.values()];
+  if (list.length === 1) return list[0].provider;
+  if (list.length > 1) {
+    const picked = await chooseWallet(list);
+    return picked; // null if user cancelled
+  }
+  // legacy fallback
+  const eth = window.ethereum;
+  if (eth && Array.isArray(eth.providers) && eth.providers.length) {
+    return eth.providers.find(p => p.isMetaMask) || eth.providers[0];
+  }
+  return eth || null;
+}
+
+/* ══════════════════════════════════════════ */
 
 async function initReadProvider() {
   try {
@@ -1139,35 +1220,56 @@ function closeSidebar() { document.getElementById('sidebar').classList.remove('o
 function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
 
 async function connectWallet() {
-  if (!window.ethereum) { alert('No wallet detected. Install MetaMask or a BOT Chain-compatible wallet.'); return; }
   const lBtn = document.getElementById('landingConnectBtn');
   const lSpinner = document.getElementById('landingConnectSpinner');
+  const resetBtn = () => { if (lBtn) { lBtn.disabled = false; lSpinner.style.display = 'none'; } };
   if (lBtn) { lBtn.disabled = true; lSpinner.style.display = 'inline-block'; }
   try {
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    try {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + CHAIN_ID.toString(16) }] });
-    } catch(sw) {
-      if (sw.code === 4902) {
-        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x' + CHAIN_ID.toString(16), chainName: 'BOT Chain Mainnet', rpcUrls: [RPC_URL], blockExplorerUrls: [EXPLORER], nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 } }] });
-      } else throw sw;
+    ethProvider = await getEthProvider();
+    if (!ethProvider) {
+      resetBtn();
+      if (!discovered.size && !window.ethereum) {
+        alert('No wallet detected. Install a browser wallet like MetaMask, then reload this page.');
+      }
+      return;
     }
-    provider = new ethers.BrowserProvider(window.ethereum);
+
+    await ethProvider.request({ method: 'eth_requestAccounts' });
+
+    const chainHex = '0x' + CHAIN_ID.toString(16);
+    try {
+      await ethProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainHex }] });
+    } catch (sw) {
+      const missing = sw.code === 4902 || sw.code === -32603 || /unrecognized|not added|unknown chain|try adding/i.test(sw.message || '');
+      if (!missing) throw sw;
+      await ethProvider.request({ method: 'wallet_addEthereumChain', params: [{
+        chainId: chainHex,
+        chainName: 'BOT Chain Mainnet',
+        rpcUrls: [RPC_URL],
+        blockExplorerUrls: [EXPLORER],
+        nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 }
+      }] });
+    }
+
+    provider = new ethers.BrowserProvider(ethProvider);
     signer   = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT, ABI, signer);
     walletAddress = await signer.getAddress();
+
     const short = walletAddress.slice(0,6) + '…' + walletAddress.slice(-4);
     document.getElementById('walletBtn').textContent = '🟢 ' + short;
     document.getElementById('walletAddress').textContent = short;
     document.getElementById('stat-wallet').textContent = short;
-    window.ethereum.on('accountsChanged', () => location.reload());
-    window.ethereum.on('chainChanged',    () => location.reload());
+
+    safeListen(ethProvider, 'accountsChanged', () => location.reload());
+    safeListen(ethProvider, 'chainChanged',    () => location.reload());
+
     showApp();
     await loadContractStats();
     toast('🌿', 'Wallet connected — welcome to AgriChain!');
   } catch(e) {
-    if (lBtn) { lBtn.disabled = false; lSpinner.style.display = 'none'; }
-    if (e.code !== 4001) alert('Connection failed: ' + (e.message || e));
+    resetBtn();
+    if (e && e.code !== 4001 && e.code !== 'ACTION_REJECTED') alert('Connection failed: ' + (e.message || e));
   }
 }
 
@@ -1208,8 +1310,8 @@ async function lookupFarmer() {
     const f = await rc.farmers(addr);
     if (f.wallet === '0x0000000000000000000000000000000000000000') { setResult('farmerResult','warning','⚠ No farmer found.'); return; }
     document.getElementById('farmerResult').innerHTML = `<div class="card" style="margin-top:0;padding:0.75rem">
-      <div class="lot-detail-row"><div class="lot-detail-label">Name</div><div class="lot-detail-val">${f.name}</div></div>
-      <div class="lot-detail-row"><div class="lot-detail-label">Location</div><div class="lot-detail-val">${f.location}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Name</div><div class="lot-detail-val">${escapeHtml(f.name)}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Location</div><div class="lot-detail-val">${escapeHtml(f.location)}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Verified</div><div class="lot-detail-val">${f.verified ? '<span class="pill pill-green">✓ Verified</span>' : '<span class="pill pill-amber">Pending</span>'}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Total Lots</div><div class="lot-detail-val">${f.totalLotsCreated.toString()}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Registered</div><div class="lot-detail-val">${new Date(Number(f.registeredAt)*1000).toLocaleDateString()}</div></div>
@@ -1258,8 +1360,8 @@ function renderLotCard(lot) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
         <span class="lot-emoji">${em}</span><span class="pill ${pillClass}">${status}</span>
       </div>
-      <div class="lot-name">Lot #${id} · ${lot.cropType}${lot.variety?' – '+lot.variety:''}</div>
-      <div class="lot-meta">📍 ${lot.farmLocation}</div>
+      <div class="lot-name">Lot #${id} · ${escapeHtml(lot.cropType)}${lot.variety?' – '+escapeHtml(lot.variety):''}</div>
+      <div class="lot-meta">📍 ${escapeHtml(lot.farmLocation)}</div>
       <div class="lot-meta">⚖️ ${lot.weightKg.toString()} kg · ${harvestDate}</div>
       <div class="lot-meta">🧑‍🌾 <span style="font-family:monospace;font-size:0.68rem">${short}</span></div>
       <div class="lot-price">${priceBOT} BOT <span>/ kg</span></div>
@@ -1303,9 +1405,9 @@ async function traceLot() {
     const status=LOT_STATUS[lot.status]||'Unknown';
     document.getElementById('traceDetails').innerHTML=`
       <div class="lot-detail-row"><div class="lot-detail-label">Lot ID</div><div class="lot-detail-val">#${lot.id}</div></div>
-      <div class="lot-detail-row"><div class="lot-detail-label">Crop</div><div class="lot-detail-val">${cropEmoji(lot.cropType)} ${lot.cropType} ${lot.variety}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Crop</div><div class="lot-detail-val">${cropEmoji(lot.cropType)} ${escapeHtml(lot.cropType)} ${escapeHtml(lot.variety)}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Weight</div><div class="lot-detail-val">${lot.weightKg.toString()} kg</div></div>
-      <div class="lot-detail-row"><div class="lot-detail-label">Farm Location</div><div class="lot-detail-val">${lot.farmLocation}</div></div>
+      <div class="lot-detail-row"><div class="lot-detail-label">Farm Location</div><div class="lot-detail-val">${escapeHtml(lot.farmLocation)}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Harvest Date</div><div class="lot-detail-val">${new Date(Number(lot.harvestDate)*1000).toLocaleDateString()}</div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Status</div><div class="lot-detail-val"><span class="pill ${lot.status==0?'pill-green':lot.status==2?'pill-amber':'pill-blue'}">${status}</span></div></div>
       <div class="lot-detail-row"><div class="lot-detail-label">Price / kg</div><div class="lot-detail-val">${ethers.formatEther(lot.pricePerKgWei.toString())} BOT</div></div>
@@ -1317,9 +1419,9 @@ async function traceLot() {
       ? checkpoints.map((cp,i)=>`<div class="trace-step">
           <div class="trace-step-left"><div class="trace-node">${i+1}</div><div class="trace-line"></div></div>
           <div class="trace-content">
-            <div class="trace-action">${cp.action}</div>
-            <div class="trace-loc">📍 ${cp.location}</div>
-            ${cp.notes?`<div class="trace-notes">${cp.notes}</div>`:''}
+            <div class="trace-action">${escapeHtml(cp.action)}</div>
+            <div class="trace-loc">📍 ${escapeHtml(cp.location)}</div>
+            ${cp.notes?`<div class="trace-notes">${escapeHtml(cp.notes)}</div>`:''}
             <div class="trace-ts">${new Date(Number(cp.timestamp)*1000).toLocaleString()} · <a href="${EXPLORER}/address/${cp.handler}" target="_blank" style="color:var(--canopy);font-family:monospace;font-size:0.67rem">${cp.handler.slice(0,10)}…</a></div>
           </div></div>`).join('')
       : '<div class="empty-state" style="padding:1rem"><p>No checkpoints recorded yet.</p></div>';
@@ -1368,7 +1470,7 @@ function setResult(id, type, msg) {
 function toast(icon, msg, txHash) {
   const log=document.getElementById('txLog'), el=document.createElement('div');
   el.className='tx-toast';
-  el.innerHTML=`<span class="tx-icon">${icon}</span><div><div>${msg}</div>${txHash?`<a class="tx-link" href="${EXPLORER}/tx/${txHash}" target="_blank">View on scan.botchain.ai ↗</a>`:''}</div>`;
+  el.innerHTML=`<span class="tx-icon">${icon}</span><div><div>${escapeHtml(msg)}</div>${txHash?`<a class="tx-link" href="${EXPLORER}/tx/${txHash}" target="_blank">View on scan.botchain.ai ↗</a>`:''}</div>`;
   log.appendChild(el);
   setTimeout(()=>el.remove(),7000);
 }

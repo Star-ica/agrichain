@@ -1205,42 +1205,36 @@ const CONTRACT = '0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18';
 /* Full ABI — both overloaded stubs are deployed on-chain and MUST be present.
    All calls to overloaded names use bracket notation: contract["fn(types)"]  */
 const ABI = [
-  /* ── Write: Farmer (overloaded — stub + real) ── */
-  "function registerFarmer() nonpayable",
-  "function registerFarmer(string _name, string _location) nonpayable",
-
-  /* ── Write: Lots ── */
-  "function createLot(string _cropType, string _variety, uint256 _weightKg, uint256 _harvestDate, string _farmLocation, uint256 _pricePerKgWei) nonpayable returns (uint256)",
-  "function purchaseLot(uint256 _lotId) payable",
-  "function updateLotStatus(uint256 _lotId, uint8 _status) nonpayable",
-
-  /* ── Write: Supply chain ── */
-  "function addCheckpoint(uint256 _lotId, string _location, string _action, string _notes) nonpayable",
-
-  /* ── Write: Admin (overloaded — stub + real) ── */
-  "function verifyFarmer() nonpayable",
-  "function verifyFarmer(address _farmer) nonpayable",
-  "function addVerifier(address _verifier) nonpayable",
-  "function setPlatformFee(uint256 _bps) nonpayable",
-
-  /* ── Read: Farmers ── */
-  "function farmers(address) view returns (address wallet, string name, string location, uint256 registeredAt, bool verified, uint256 totalLotsCreated)",
-  "function getFarmerLots(address _farmer) view returns (uint256[])",
-  "function farmerLots(address, uint256) view returns (uint256)",
-
-  /* ── Read: Lots ── */
-  "function lots(uint256) view returns (uint256 id, address farmer, string cropType, string variety, uint256 weightKg, uint256 harvestDate, string farmLocation, uint8 status, uint256 pricePerKgWei, address currentOwner, uint256 createdAt)",
-  "function getLot(uint256 _lotId) view returns (tuple(uint256 id, address farmer, string cropType, string variety, uint256 weightKg, uint256 harvestDate, string farmLocation, uint8 status, uint256 pricePerKgWei, address currentOwner, uint256 createdAt))",
-  "function getLotCheckpoints(uint256 _lotId) view returns (tuple(address handler, string location, string action, uint256 timestamp, string notes)[])",
-  "function lotCheckpoints(uint256, uint256) view returns (address handler, string location, string action, uint256 timestamp, string notes)",
-  "function lotCounter() view returns (uint256)",
-
-  /* ── Read: Admin ── */
-  "function owner() view returns (address)",
-  "function platformFeeBps() view returns (uint256)",
-  "function verifiers(address) view returns (bool)"
+  {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"lotId","type":"uint256"},{"indexed":true,"internalType":"address","name":"handler","type":"address"},{"indexed":false,"internalType":"string","name":"action","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"CheckpointAdded","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"farmer","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"string","name":"location","type":"string"}],"name":"FarmerRegistered","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"farmer","type":"address"},{"indexed":true,"internalType":"address","name":"verifier","type":"address"}],"name":"FarmerVerified","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"lotId","type":"uint256"},{"indexed":true,"internalType":"address","name":"farmer","type":"address"},{"indexed":false,"internalType":"string","name":"cropType","type":"string"},{"indexed":false,"internalType":"uint256","name":"weightKg","type":"uint256"}],"name":"LotCreated","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"lotId","type":"uint256"},{"indexed":true,"internalType":"address","name":"buyer","type":"address"},{"indexed":false,"internalType":"uint256","name":"pricePaid","type":"uint256"}],"name":"LotPurchased","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"lotId","type":"uint256"},{"indexed":false,"internalType":"enum AgriChain.LotStatus","name":"newStatus","type":"uint8"}],"name":"LotStatusUpdated","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"verifier","type":"address"}],"name":"VerifierAdded","type":"event"},
+  {"inputs":[{"internalType":"uint256","name":"_lotId","type":"uint256"},{"internalType":"string","name":"_location","type":"string"},{"internalType":"string","name":"_action","type":"string"},{"internalType":"string","name":"_notes","type":"string"}],"name":"addCheckpoint","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_verifier","type":"address"}],"name":"addVerifier","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"string","name":"_cropType","type":"string"},{"internalType":"string","name":"_variety","type":"string"},{"internalType":"uint256","name":"_weightKg","type":"uint256"},{"internalType":"uint256","name":"_harvestDate","type":"uint256"},{"internalType":"string","name":"_farmLocation","type":"string"},{"internalType":"uint256","name":"_pricePerKgWei","type":"uint256"}],"name":"createLot","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"farmerLots","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"farmers","outputs":[{"internalType":"address","name":"wallet","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"location","type":"string"},{"internalType":"uint256","name":"registeredAt","type":"uint256"},{"internalType":"bool","name":"verified","type":"bool"},{"internalType":"uint256","name":"totalLotsCreated","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_farmer","type":"address"}],"name":"getFarmerLots","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_lotId","type":"uint256"}],"name":"getLot","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"farmer","type":"address"},{"internalType":"string","name":"cropType","type":"string"},{"internalType":"string","name":"variety","type":"string"},{"internalType":"uint256","name":"weightKg","type":"uint256"},{"internalType":"uint256","name":"harvestDate","type":"uint256"},{"internalType":"string","name":"farmLocation","type":"string"},{"internalType":"enum AgriChain.LotStatus","name":"status","type":"uint8"},{"internalType":"uint256","name":"pricePerKgWei","type":"uint256"},{"internalType":"address","name":"currentOwner","type":"address"},{"internalType":"uint256","name":"createdAt","type":"uint256"}],"internalType":"struct AgriChain.ProduceLot","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_lotId","type":"uint256"}],"name":"getLotCheckpoints","outputs":[{"components":[{"internalType":"address","name":"handler","type":"address"},{"internalType":"string","name":"location","type":"string"},{"internalType":"string","name":"action","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"notes","type":"string"}],"internalType":"struct AgriChain.Checkpoint[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"lotCheckpoints","outputs":[{"internalType":"address","name":"handler","type":"address"},{"internalType":"string","name":"location","type":"string"},{"internalType":"string","name":"action","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"notes","type":"string"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"lotCounter","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"lots","outputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"farmer","type":"address"},{"internalType":"string","name":"cropType","type":"string"},{"internalType":"string","name":"variety","type":"string"},{"internalType":"uint256","name":"weightKg","type":"uint256"},{"internalType":"uint256","name":"harvestDate","type":"uint256"},{"internalType":"string","name":"farmLocation","type":"string"},{"internalType":"enum AgriChain.LotStatus","name":"status","type":"uint8"},{"internalType":"uint256","name":"pricePerKgWei","type":"uint256"},{"internalType":"address","name":"currentOwner","type":"address"},{"internalType":"uint256","name":"createdAt","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"platformFeeBps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_lotId","type":"uint256"}],"name":"purchaseLot","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_location","type":"string"}],"name":"registerFarmer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"registerFarmer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_bps","type":"uint256"}],"name":"setPlatformFee","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_lotId","type":"uint256"},{"internalType":"enum AgriChain.LotStatus","name":"_status","type":"uint8"}],"name":"updateLotStatus","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"verifiers","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"verifyFarmer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_farmer","type":"address"}],"name":"verifyFarmer","outputs":[],"stateMutability":"nonpayable","type":"function"}
 ];
-
 /* ═══════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════ */
@@ -1448,7 +1442,10 @@ async function registerFarmer() {
   if (!name || !loc) { toast('⚠','Fill in name and location'); return; }
   try {
     setResult('regResult','info','⏳ Sending transaction…');
-    const tx = await contract["registerFarmer(string,string)"](name, loc);
+    
+    // CHANGED: Use getFunction for overloaded methods in ethers v6
+    const tx = await contract.getFunction("registerFarmer(string,string)")(name, loc);
+    
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
     setResult('regResult','success',`✅ Registered! <a href="${EXPLORER}/tx/${receipt.hash}" target="_blank" style="color:var(--canopy)">View tx ↗</a> — Await admin verification.`);
@@ -1687,7 +1684,10 @@ async function adminVerifyFarmer() {
   if (!addr) { toast('⚠','Enter a farmer address'); return; }
   try {
     setResult('adminVerifyResult','info','⏳ Sending transaction…');
-    const tx = await contract["verifyFarmer(address)"](addr);
+    
+    // CHANGED: Use getFunction for overloaded methods in ethers v6
+    const tx = await contract.getFunction("verifyFarmer(address)")(addr);
+    
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
     setResult('adminVerifyResult','success',`✅ Farmer verified! <a href="${EXPLORER}/tx/${receipt.hash}" target="_blank" style="color:var(--canopy)">View tx ↗</a>`);

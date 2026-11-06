@@ -1102,12 +1102,11 @@ body {
             <div class="field">
               <label>New Status</label>
               <select id="adminLotStatus">
-                <option value="0">0 — Available</option>
-                <option value="1">1 — Reserved</option>
+                <option value="0">0 — Registered</option>
+                <option value="1">1 — Harvested</option>
                 <option value="2">2 — In Transit</option>
-                <option value="3">3 — Delivered</option>
+                <option value="3">3 — At Warehouse</option>
                 <option value="4">4 — Sold</option>
-                <option value="5">5 — Disputed</option>
               </select>
             </div>
           </div>
@@ -1203,10 +1202,11 @@ const RPC_URL  = 'https://rpc.botchain.ai';
 const EXPLORER = 'https://scan.botchain.ai';
 const CONTRACT = '0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18';
 
-/* Full ABI — overloaded names removed (keeps only the signatures we call)
-   so ethers v6 can resolve every function by name without ambiguity.      */
+/* Full ABI — both overloaded stubs are deployed on-chain and MUST be present.
+   All calls to overloaded names use bracket notation: contract["fn(types)"]  */
 const ABI = [
-  /* ── Write: Farmer ── */
+  /* ── Write: Farmer (overloaded — stub + real) ── */
+  "function registerFarmer() nonpayable",
   "function registerFarmer(string _name, string _location) nonpayable",
 
   /* ── Write: Lots ── */
@@ -1217,7 +1217,8 @@ const ABI = [
   /* ── Write: Supply chain ── */
   "function addCheckpoint(uint256 _lotId, string _location, string _action, string _notes) nonpayable",
 
-  /* ── Write: Admin ── */
+  /* ── Write: Admin (overloaded — stub + real) ── */
+  "function verifyFarmer() nonpayable",
   "function verifyFarmer(address _farmer) nonpayable",
   "function addVerifier(address _verifier) nonpayable",
   "function setPlatformFee(uint256 _bps) nonpayable",
@@ -1245,7 +1246,8 @@ const ABI = [
 ═══════════════════════════════════════════════ */
 let provider, signer, contract, readContract, walletAddress, ethProvider = null;
 
-const LOT_STATUS = ['Available','Reserved','In Transit','Delivered','Sold','Disputed'];
+// Matches contract enum: Registered=0, Harvested=1, InTransit=2, AtWarehouse=3, Sold=4
+const LOT_STATUS = ['Registered','Harvested','In Transit','At Warehouse','Sold'];
 const CROP_EMOJI = {
   tomato:'🍅', maize:'🌽', yam:'🍠', cassava:'🥔', pepper:'🌶️',
   onion:'🧅', rice:'🍚', cocoa:'🫘', plantain:'🍌', groundnut:'🥜',
@@ -1446,7 +1448,7 @@ async function registerFarmer() {
   if (!name || !loc) { toast('⚠','Fill in name and location'); return; }
   try {
     setResult('regResult','info','⏳ Sending transaction…');
-    const tx = await contract.registerFarmer(name, loc);
+    const tx = await contract["registerFarmer(string,string)"](name, loc);
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
     setResult('regResult','success',`✅ Registered! <a href="${EXPLORER}/tx/${receipt.hash}" target="_blank" style="color:var(--canopy)">View tx ↗</a> — Await admin verification.`);
@@ -1562,13 +1564,14 @@ async function loadMarketplace() {
 function renderLotCard(lot) {
   const id = lot.id.toString();
   const status = LOT_STATUS[lot.status] || 'Unknown';
-  const pillClass = lot.status==0?'pill-green':lot.status==2?'pill-amber':lot.status==4?'pill-gray':'pill-blue';
-  const bandClass = lot.status==0?'band-green':lot.status==2?'band-amber':lot.status==4?'band-gray':'band-blue';
+  // 0=Registered(green) 1=Harvested(blue) 2=InTransit(amber) 3=AtWarehouse(blue) 4=Sold(gray)
+  const pillClass = lot.status==4?'pill-gray':lot.status==2?'pill-amber':lot.status==0?'pill-green':'pill-blue';
+  const bandClass = lot.status==4?'band-gray':lot.status==2?'band-amber':lot.status==0?'band-green':'band-blue';
   const harvestDate = new Date(Number(lot.harvestDate)*1000).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
   const priceBOT = ethers.formatEther(lot.pricePerKgWei.toString());
   const em = cropEmoji(lot.cropType);
   const short = lot.farmer.slice(0,6)+'…'+lot.farmer.slice(-4);
-  const canBuy = lot.status == 0;
+  const canBuy = lot.status != 4; // any status except Sold
   return `<div class="lot-card">
     <div class="lot-card-band ${bandClass}"></div>
     <div class="lot-card-body">
@@ -1624,7 +1627,7 @@ async function traceLot() {
     const [lot, checkpoints] = await Promise.all([rc.getLot(lotId), rc.getLotCheckpoints(lotId)]);
     if (lot.id.toString() === '0') { toast('⚠','Lot not found'); return; }
     const status = LOT_STATUS[lot.status] || 'Unknown';
-    const pillClass = lot.status==0?'pill-green':lot.status==2?'pill-amber':'pill-blue';
+    const pillClass = lot.status==4?'pill-gray':lot.status==2?'pill-amber':lot.status==0?'pill-green':'pill-blue';
     document.getElementById('traceExplorerLink').innerHTML = `<a href="${EXPLORER}/address/${lot.farmer}" target="_blank" style="font-size:0.72rem;color:var(--canopy);text-decoration:none">🔍 Explorer ↗</a>`;
     document.getElementById('traceDetails').innerHTML = `
       <div class="lot-detail-row"><div class="lot-detail-label">Lot ID</div><div class="lot-detail-val">#${lot.id}</div></div>
@@ -1684,7 +1687,7 @@ async function adminVerifyFarmer() {
   if (!addr) { toast('⚠','Enter a farmer address'); return; }
   try {
     setResult('adminVerifyResult','info','⏳ Sending transaction…');
-    const tx = await contract.verifyFarmer(addr);
+    const tx = await contract["verifyFarmer(address)"](addr);
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
     setResult('adminVerifyResult','success',`✅ Farmer verified! <a href="${EXPLORER}/tx/${receipt.hash}" target="_blank" style="color:var(--canopy)">View tx ↗</a>`);

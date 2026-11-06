@@ -989,7 +989,7 @@ body {
           <div class="form-grid cols-3">
             <div class="field"><label>Weight (kg)</label><input id="weight" type="number" placeholder="500"/></div>
             <div class="field"><label>Harvest Date</label><input id="harvest" type="date"/></div>
-            <div class="field"><label>Price / kg (BOT wei)</label><input id="price" placeholder="50000000000000000"/></div>
+            <div class="field"><label>Price / kg (BOT)</label><input id="price" type="number" step="any" placeholder="e.g. 0.05"/></div>
           </div>
           <div class="form-grid cols-1">
             <div class="field"><label>Farm Location</label><input id="lotLoc" placeholder="e.g. Ibadan Farm, Oyo State"/></div>
@@ -1203,11 +1203,11 @@ const RPC_URL  = 'https://rpc.botchain.ai';
 const EXPLORER = 'https://scan.botchain.ai';
 const CONTRACT = '0xCc04ABDBB200cA8333280b1aD71f7D3eF1260e18';
 
-/* Full ABI matching the deployed contract */
+/* Full ABI — overloaded names removed (keeps only the signatures we call)
+   so ethers v6 can resolve every function by name without ambiguity.      */
 const ABI = [
   /* ── Write: Farmer ── */
   "function registerFarmer(string _name, string _location) nonpayable",
-  "function registerFarmer() nonpayable",
 
   /* ── Write: Lots ── */
   "function createLot(string _cropType, string _variety, uint256 _weightKg, uint256 _harvestDate, string _farmLocation, uint256 _pricePerKgWei) nonpayable returns (uint256)",
@@ -1219,7 +1219,6 @@ const ABI = [
 
   /* ── Write: Admin ── */
   "function verifyFarmer(address _farmer) nonpayable",
-  "function verifyFarmer() nonpayable",
   "function addVerifier(address _verifier) nonpayable",
   "function setPlatformFee(uint256 _bps) nonpayable",
 
@@ -1524,12 +1523,13 @@ async function createLot() {
   if (!crop || !weight || !harvest || !loc || !price) { toast('⚠','Fill all required fields'); return; }
   try {
     setResult('createResult','info','⏳ Sending transaction…');
+    const priceWei = ethers.parseEther(price);   // BOT → wei
     const tx = await contract.createLot(
       crop, variety,
       BigInt(weight),
       BigInt(Math.floor(new Date(harvest).getTime()/1000)),
       loc,
-      BigInt(price)
+      priceWei
     );
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
@@ -1684,7 +1684,7 @@ async function adminVerifyFarmer() {
   if (!addr) { toast('⚠','Enter a farmer address'); return; }
   try {
     setResult('adminVerifyResult','info','⏳ Sending transaction…');
-    const tx = await contract['verifyFarmer(address)'](addr);
+    const tx = await contract.verifyFarmer(addr);
     toast('📡','Tx submitted', tx.hash);
     const receipt = await tx.wait();
     setResult('adminVerifyResult','success',`✅ Farmer verified! <a href="${EXPLORER}/tx/${receipt.hash}" target="_blank" style="color:var(--canopy)">View tx ↗</a>`);
